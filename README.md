@@ -82,11 +82,67 @@ client/
 
 ## Contributing
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+1. Fork the repo on GitHub
+Go to: https://github.com/MungaiMwangi001/Murang-a_project_tracker
+->  Click Fork (top right)
+
+2. Clone your fork to your machine
+bash
+Copy code
+git clone https://github.com/your-new-account/Murang-a_project_tracker.git
+
+3. Enter the project directory
+```bash
+Copy code
+cd Murang-a_project_tracker
+```
+4. Set your identity
+
+```bash
+
+git config user.name "Your New Account Name"
+git config user.email "youremail@example.com"
+
+```
+
+5. Add the original repo as an upstream remote
+So you can fetch changes from the original project if needed
+
+```bash
+git remote add upstream https://github.com/MungaiMwangi001/Murang-a_project_tracker.git
+```
+Check remotes:
+
+```bash
+
+git remote -v
+```
+
+6. Create a new branch for your changes
+Example:
+
+```bash
+Copy code
+git checkout -b add-login-feature
+
+```
+7. Make your changes
+
+8. Stage and commit them
+
+```bash
+
+git add .
+git commit -m "Added login feature"
+```
+9. Push your branch to your forked repo
+```bash
+
+git push origin add-login-feature
+```
+10. Create a Pull Request
+
+Go to your fork on GitHub, and GitHub will prompt you to create a Pull Request to MungaiMwangi001/Murang-a_project_tracker
 
 ## License
 

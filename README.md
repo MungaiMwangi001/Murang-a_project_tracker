@@ -37,7 +37,7 @@ A modern web application for tracking and managing projects. Built with React, T
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/project-tracker.git
+   git clone https://github.com/MungaiMwangi001/Murang-a_project_tracker
    cd project-tracker
    ```
 

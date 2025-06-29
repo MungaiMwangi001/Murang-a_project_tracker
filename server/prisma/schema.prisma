@@ -1,0 +1,86 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      Role     @default(PUBLIC)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  projects  Project[]        @relation("StaffProjects")
+  comments  Comment[]
+  editedProjects Project[]   @relation("EditedProjects")
+  createdProjects Project[]  @relation("CreatedProjects")
+
+  @@map("users")
+}
+
+model Project {
+  id          String        @id @default(cuid())
+  title       String
+  description String?
+  status      ProjectStatus @default(PLANNING)
+  priority    Priority      @default(MEDIUM)
+  dueDate     DateTime?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  // Relations
+  staffId     String
+  staff       User      @relation("StaffProjects", fields: [staffId], references: [id], onDelete: Cascade)
+  comments    Comment[]
+
+  createdById String
+  createdBy   User      @relation("CreatedProjects", fields: [createdById], references: [id], onDelete: SetNull)
+  lastEditedById String
+  lastEditedBy   User   @relation("EditedProjects", fields: [lastEditedById], references: [id], onDelete: SetNull)
+
+  @@map("projects")
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  userId    String
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@map("comments")
+}
+
+enum Role {
+  PUBLIC
+  STAFF
+  ADMIN
+}
+
+enum ProjectStatus {
+  PLANNING
+  IN_PROGRESS
+  REVIEW
+  COMPLETED
+  ON_HOLD
+  CANCELLED
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}

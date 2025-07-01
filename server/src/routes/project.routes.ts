@@ -30,6 +30,6 @@ router.get('/staff/projects', requireStaff, getProjectsByStaff);
 router.get('/staff/:staffId/projects', requireStaff, getProjectsByStaff);
 
 // Admin only routes
-router.delete('/:id', requireAdmin, deleteProject);
+router.delete('/:id', requireProjectOwnership, deleteProject);
 
 export default router; 

@@ -31,19 +31,19 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="fixed top-0 left-0 right-0 bg-green-700 border-b-4 border-white/20 shadow-lg z-50">
-      <div className="flex justify-between items-center h-16 px-0 mx-0">
+    <nav className="fixed top-0 left-0 right-0 w-full bg-green-700/95 border-b-4 border-green-900 shadow-2xl z-50 backdrop-blur-md">
+      <div className="flex justify-between items-center h-20 px-6 mx-0">
         {/* Left side - Logos */}
         <div className="flex items-center space-x-6">
           <img
             src="/src/assets/kenyan logo.png"
             alt="Government of Kenya"
-            className="h-14 w-auto"
+            className="h-16 w-auto drop-shadow-xl bg-white rounded-lg p-1"
           />
           <img
             src="/src/assets/murang'a_logo.jpeg"
             alt="Murang'a County"
-            className="h-14 w-auto"
+            className="h-16 w-auto drop-shadow-xl bg-white rounded-lg p-1"
           />
         </div>
 

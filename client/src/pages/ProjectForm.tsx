@@ -156,8 +156,10 @@ const ProjectForm = () => {
       };
       // Send to backend
       const token = localStorage.getItem('token');
-      const res = await fetch('/api/projects', {
-        method: 'POST',
+      const url = id ? `/api/projects/${id}` : '/api/projects';
+      const method = id ? 'PUT' : 'POST';
+      const res = await fetch(url, {
+        method,
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,

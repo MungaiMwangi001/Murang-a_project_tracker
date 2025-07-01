@@ -4,6 +4,10 @@ import { Project } from '../types/project';
 import Navbar from '../components/Navbar';
 import ProjectForm from './ProjectForm';
 import { UserContext } from '../context/UserContext';
+import { BellIcon, PlusCircleIcon, ClockIcon } from '@heroicons/react/24/outline';
+import * as XLSX from 'xlsx';
+// @ts-ignore
+import { saveAs } from 'file-saver';
 
 const StaffDashboardHome = () => {
   const [userProjects, setUserProjects] = useState<Project[]>([]);
@@ -37,6 +41,22 @@ const StaffDashboardHome = () => {
     fetchStaffProjects();
   }, []);
 
+  // Delete project (staff)
+  const handleDeleteProject = async (id: string) => {
+    if (!window.confirm('Are you sure you want to delete this project?')) return;
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`/api/projects/${id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error('Failed to delete project');
+      setUserProjects(projects => projects.filter(p => p.id !== id));
+    } catch (err) {
+      alert('Error deleting project.');
+    }
+  };
+
   if (user && user.role === 'STAFF' && !user.isApproved) {
     return (
       <div className="min-h-screen bg-gray-50">
@@ -50,95 +70,97 @@ const StaffDashboardHome = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 to-white">
       <Navbar />
-      
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 mt-24">
         {/* Dashboard Header */}
-        <div className="mb-8">
-          <div className="flex justify-between items-center">
-            <h1 className="text-3xl font-bold text-gray-900">Staff Dashboard</h1>
-            <div className="flex space-x-4">
-              <button
-                onClick={() => navigate('/staff/projects/new')}
-                className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-              >
-                <svg className="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
-                </svg>
-                Add New Project
-              </button>
-              <button
-                onClick={logout}
-                className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-              >
-                Logout
-              </button>
-            </div>
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8 gap-4">
+          <div>
+            <h1 className="text-4xl font-extrabold text-green-800 mb-1">Welcome, {user?.name || 'Staff'}!</h1>
+            <p className="text-gray-600 text-lg">Here's a summary of your projects and quick actions.</p>
           </div>
-          
-          {/* Quick Stats */}
-          <div className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            <div className="bg-white overflow-hidden shadow rounded-lg">
-              <div className="p-5">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0">
-                    <svg className="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                    </svg>
-                  </div>
-                  <div className="ml-5 w-0 flex-1">
-                    <dl>
-                      <dt className="text-sm font-medium text-gray-500 truncate">Total Projects</dt>
-                      <dd className="text-lg font-medium text-gray-900">{userProjects.length}</dd>
-                    </dl>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white overflow-hidden shadow rounded-lg">
-              <div className="p-5">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0">
-                    <svg className="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                  </div>
-                  <div className="ml-5 w-0 flex-1">
-                    <dl>
-                      <dt className="text-sm font-medium text-gray-500 truncate">Ongoing Projects</dt>
-                      <dd className="text-lg font-medium text-gray-900">
-                        {userProjects.filter(p => p.status === 'ongoing').length}
-                      </dd>
-                    </dl>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white overflow-hidden shadow rounded-lg">
-              <div className="p-5">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0">
-                    <svg className="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                  </div>
-                  <div className="ml-5 w-0 flex-1">
-                    <dl>
-                      <dt className="text-sm font-medium text-gray-500 truncate">Completed Projects</dt>
-                      <dd className="text-lg font-medium text-gray-900">
-                        {userProjects.filter(p => p.status === 'completed').length}
-                      </dd>
-                    </dl>
-                  </div>
-                </div>
-              </div>
-            </div>
+          <div className="flex items-center gap-4">
+            {/* Notification Bell Placeholder */}
+            <button className="relative p-2 rounded-full bg-white shadow hover:bg-green-100 transition">
+              <BellIcon className="h-7 w-7 text-green-700" />
+            </button>
+            <button
+              onClick={() => {
+                // Export My Projects logic
+                const ws = XLSX.utils.json_to_sheet(userProjects.map(p => ({
+                  Title: p.title,
+                  Status: p.status,
+                  Progress: p.progress,
+                  Budget: p.budgetedCost,
+                  Start: p.contractStartDate,
+                  End: p.contractEndDate,
+                  Constituency: p.constituency,
+                  Ward: p.ward,
+                })));
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, 'My Projects');
+                const buf = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+                saveAs(new Blob([buf], { type: 'application/octet-stream' }), 'my_projects.xlsx');
+              }}
+              className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-base font-semibold text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition"
+            >
+              Export My Projects
+            </button>
+            <button
+              onClick={() => navigate('/staff/projects/new')}
+              className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-base font-semibold text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition"
+            >
+              <PlusCircleIcon className="h-6 w-6 mr-2" />
+              Add New Project
+            </button>
+            <button
+              onClick={logout}
+              className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-base font-semibold text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition"
+            >
+              Logout
+            </button>
           </div>
         </div>
-
+        {/* Project Summary Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+          <div className="bg-white rounded-xl shadow p-6 flex flex-col items-center hover:shadow-lg transition">
+            <span className="text-3xl font-bold text-green-700">{userProjects.length}</span>
+            <span className="text-gray-500 mt-2">Total Projects</span>
+          </div>
+          <div className="bg-white rounded-xl shadow p-6 flex flex-col items-center hover:shadow-lg transition">
+            <span className="text-3xl font-bold text-blue-700">{userProjects.filter(p => p.status === 'ongoing').length}</span>
+            <span className="text-gray-500 mt-2">Ongoing</span>
+          </div>
+          <div className="bg-white rounded-xl shadow p-6 flex flex-col items-center hover:shadow-lg transition">
+            <span className="text-3xl font-bold text-green-500">{userProjects.filter(p => p.status === 'completed').length}</span>
+            <span className="text-gray-500 mt-2">Completed</span>
+          </div>
+          <div className="bg-white rounded-xl shadow p-6 flex flex-col items-center hover:shadow-lg transition">
+            <span className="text-3xl font-bold text-yellow-600">{userProjects.filter(p => (typeof p.status === 'string' && (p.status.toLowerCase() === 'pending' || p.status.toLowerCase() === 'under_procurement'))).length}</span>
+            <span className="text-gray-500 mt-2">Pending/Procurement</span>
+          </div>
+        </div>
+        {/* Quick Links */}
+        <div className="flex flex-wrap gap-4 mb-10">
+          <button
+            onClick={() => navigate('/staff/projects/new')}
+            className="flex items-center px-4 py-2 bg-green-100 text-green-800 rounded-lg shadow hover:bg-green-200 transition"
+          >
+            <PlusCircleIcon className="h-5 w-5 mr-2" /> New Project
+          </button>
+          <button
+            onClick={() => {/* TODO: navigate to pending approvals */}}
+            className="flex items-center px-4 py-2 bg-yellow-100 text-yellow-800 rounded-lg shadow hover:bg-yellow-200 transition"
+          >
+            <ClockIcon className="h-5 w-5 mr-2" /> Pending Approvals
+          </button>
+          <button
+            onClick={() => {/* TODO: navigate to recent activity */}}
+            className="flex items-center px-4 py-2 bg-blue-100 text-blue-800 rounded-lg shadow hover:bg-blue-200 transition"
+          >
+            <BellIcon className="h-5 w-5 mr-2" /> Recent Activity
+          </button>
+        </div>
         {/* Project List */}
         <div className="bg-white shadow overflow-hidden sm:rounded-md">
           <ul className="divide-y divide-gray-200">
@@ -170,6 +192,12 @@ const StaffDashboardHome = () => {
                             className="font-medium text-green-600 hover:text-green-500"
                           >
                             Edit
+                          </button>
+                          <button
+                            onClick={() => handleDeleteProject(project.id)}
+                            className="ml-2 font-medium text-red-600 hover:text-red-500"
+                          >
+                            Delete
                           </button>
                         </div>
                       </div>

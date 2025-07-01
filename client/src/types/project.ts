@@ -32,7 +32,7 @@ export interface Project {
   recommendations: string;
   pmc: string; // Project Management Committee
   lastUpdated: string;
-  constituency: string;
+  subCounty: string;
   ward: string;
   images: string[];
   financialYear: string;

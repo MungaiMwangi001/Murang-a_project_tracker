@@ -13,11 +13,11 @@ const ProjectDetailsModal = ({ project, isOpen, onClose }: ProjectDetailsModalPr
 
   if (!project || !isOpen) return null;
 
-  const handleAddComment = async (content: string) => {
+  const handleAddComment = async (content: string, userName?: string) => {
     try {
       setIsAddingComment(true);
       // TODO: Replace with actual API call to add comment
-      console.log('Adding comment:', content);
+      console.log('Adding comment:', content, 'by:', userName || 'authenticated user');
       
       // Simulate API delay
       await new Promise(resolve => setTimeout(resolve, 1000));
@@ -100,7 +100,7 @@ const ProjectDetailsModal = ({ project, isOpen, onClose }: ProjectDetailsModalPr
                         </div>
                         <div>
                           <dt className="text-sm font-medium text-gray-500">Location</dt>
-                          <dd className="mt-1 text-sm text-gray-900">{project.ward}, {project.constituency}</dd>
+                          <dd className="mt-1 text-sm text-gray-900">{project.ward}, {project.subCounty}</dd>
                         </div>
                         <div>
                           <dt className="text-sm font-medium text-gray-500">Project PMC</dt>

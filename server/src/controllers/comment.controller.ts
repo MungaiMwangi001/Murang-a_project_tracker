@@ -10,7 +10,7 @@ export const createComment = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const { projectId, content, parentId } = req.body;
+    const { projectId, content, parentId, userName } = req.body;
 
     if (!projectId || !content) {
       res.status(400).json({
@@ -33,15 +33,30 @@ export const createComment = async (
       return;
     }
 
+    let commentData: any = {
+      content,
+      timestamp: new Date(),
+      projectId,
+      parentId: parentId || null,
+      userName: '',
+    };
+
+    if (req.user) {
+      commentData.userId = req.user.id;
+      commentData.userName = (req.user as any).name || req.user.email;
+    } else {
+      if (!userName) {
+        res.status(400).json({
+          error: 'Missing userName',
+          message: 'Name is required for public comments'
+        });
+        return;
+      }
+      commentData.userName = userName;
+    }
+
     const comment = await prisma.comment.create({
-      data: {
-        content,
-        userId: req.user!.id,
-        userName: (req.user as any).name || req.user!.email,
-        timestamp: new Date(),
-        projectId,
-        parentId: parentId || null
-      },
+      data: commentData,
       include: {
         user: {
           select: {

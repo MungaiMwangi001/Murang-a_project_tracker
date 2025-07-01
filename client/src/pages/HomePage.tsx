@@ -1,48 +1,110 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 import construction4 from '../assets/constrcuction4.jpg';
 import constructionSite2 from '../assets/construction_site2.jpg';
 import Navbar from '../components/Navbar';
+import { Project } from '../types/project';
 
 const HomePage = () => {
-  // Stats for the floating cards
-  const stats = [
-    {
-      label: 'Total Projects',
-      value: '156',
-      amount: 'KSH 2.3B',
-      color: 'bg-blue-600/90 backdrop-blur-sm',
-    },
-    {
-      label: 'Completed',
-      value: '45',
-      amount: 'KSH 890M',
-      color: 'bg-green-600/90 backdrop-blur-sm',
-    },
-    {
-      label: 'Ongoing',
-      value: '52',
-      amount: 'KSH 750M',
-      color: 'bg-yellow-600/90 backdrop-blur-sm',
-    },
-    {
-      label: 'Stalled',
-      value: '18',
-      amount: 'KSH 230M',
-      color: 'bg-red-600/90 backdrop-blur-sm',
-    },
-    {
-      label: 'Not Started',
-      value: '19',
-      amount: 'KSH 120M',
-      color: 'bg-gray-600/90 backdrop-blur-sm',
-    },
-    {
-      label: 'Under Procurement',
-      value: '22',
-      amount: 'KSH 310M',
-      color: 'bg-purple-600/90 backdrop-blur-sm',
+  const navigate = useNavigate();
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch projects on component mount
+  useEffect(() => {
+    const fetchProjects = async () => {
+      try {
+        setLoading(true);
+        const token = localStorage.getItem('token');
+        const res = await fetch('/api/projects', {
+          headers: token ? { Authorization: `Bearer ${token}` } : {}
+        });
+        if (!res.ok) throw new Error('Failed to fetch projects');
+        const data = await res.json();
+        const allProjects = data.projects || data;
+        setProjects(allProjects);
+      } catch (err) {
+        console.error('Error fetching projects:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProjects();
+  }, []);
+
+  // Calculate statistics from real data
+  const calculateStats = () => {
+    const totalProjects = projects.length;
+    const totalBudget = projects.reduce((sum, p) => sum + (p.budgetedCost || 0), 0);
+    
+    const statusCounts = projects.reduce((acc, p) => {
+      const status = p.status?.toLowerCase() || 'unknown';
+      acc[status] = (acc[status] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+
+    const statusBudgets = projects.reduce((acc, p) => {
+      const status = p.status?.toLowerCase() || 'unknown';
+      acc[status] = (acc[status] || 0) + (p.budgetedCost || 0);
+      return acc;
+    }, {} as Record<string, number>);
+
+    return [
+      {
+        label: 'Total Projects',
+        value: totalProjects.toString(),
+        amount: `KSH ${(totalBudget / 1000000).toFixed(1)}M`,
+        color: 'bg-blue-600/90 backdrop-blur-sm',
+        status: 'all'
+      },
+      {
+        label: 'Completed',
+        value: (statusCounts.completed || 0).toString(),
+        amount: `KSH ${((statusBudgets.completed || 0) / 1000000).toFixed(1)}M`,
+        color: 'bg-green-600/90 backdrop-blur-sm',
+        status: 'completed'
+      },
+      {
+        label: 'Ongoing',
+        value: (statusCounts.ongoing || 0).toString(),
+        amount: `KSH ${((statusBudgets.ongoing || 0) / 1000000).toFixed(1)}M`,
+        color: 'bg-yellow-600/90 backdrop-blur-sm',
+        status: 'ongoing'
+      },
+      {
+        label: 'Stalled',
+        value: (statusCounts.stalled || 0).toString(),
+        amount: `KSH ${((statusBudgets.stalled || 0) / 1000000).toFixed(1)}M`,
+        color: 'bg-red-600/90 backdrop-blur-sm',
+        status: 'stalled'
+      },
+      {
+        label: 'Not Started',
+        value: (statusCounts.not_started || 0).toString(),
+        amount: `KSH ${((statusBudgets.not_started || 0) / 1000000).toFixed(1)}M`,
+        color: 'bg-gray-600/90 backdrop-blur-sm',
+        status: 'not_started'
+      },
+      {
+        label: 'Under Procurement',
+        value: (statusCounts.under_procurement || 0).toString(),
+        amount: `KSH ${((statusBudgets.under_procurement || 0) / 1000000).toFixed(1)}M`,
+        color: 'bg-purple-600/90 backdrop-blur-sm',
+        status: 'under_procurement'
+      }
+    ];
+  };
+
+  const stats = calculateStats();
+
+  const handleCardClick = (status: string) => {
+    if (status === 'all') {
+      navigate('/projects');
+    } else {
+      navigate(`/projects?status=${status}`);
     }
-  ];
+  };
 
   return (
     <div className="min-h-screen flex flex-col pt-16">
@@ -88,20 +150,33 @@ const HomePage = () => {
         {/* Stats Section */}
         <div className="lg:w-full bg-gray-100 p-8 lg:p-12">
           <h3 className="text-2xl font-semibold text-gray-900 mb-6">Project Statistics</h3>
-          <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
-            {stats.map((stat, index) => (
-              <div
-                key={index}
-                className={`${stat.color} rounded-xl p-4 lg:p-6 text-white transform hover:scale-105 transition-transform duration-300 shadow-2xl flex flex-col`}
-              >
-                <div className="text-3xl lg:text-4xl font-bold mb-2 drop-shadow-md">{stat.value}</div>
-                <div className="text-sm lg:text-base text-white/90 mb-2">{stat.label}</div>
-                <div className="mt-auto pt-2 border-t border-white/30 text-lg lg:text-xl font-semibold text-white">
-                  {stat.amount}
+          {loading ? (
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
+              {[...Array(6)].map((_, index) => (
+                <div key={index} className="bg-gray-300 rounded-xl p-4 lg:p-6 animate-pulse">
+                  <div className="h-8 bg-gray-400 rounded mb-2"></div>
+                  <div className="h-4 bg-gray-400 rounded mb-2"></div>
+                  <div className="h-6 bg-gray-400 rounded"></div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
+              {stats.map((stat, index) => (
+                <button
+                  key={index}
+                  onClick={() => handleCardClick(stat.status)}
+                  className={`${stat.color} rounded-xl p-4 lg:p-6 text-white transform hover:scale-105 transition-transform duration-300 shadow-2xl flex flex-col cursor-pointer hover:shadow-3xl`}
+                >
+                  <div className="text-3xl lg:text-4xl font-bold mb-2 drop-shadow-md">{stat.value}</div>
+                  <div className="text-sm lg:text-base text-white/90 mb-2">{stat.label}</div>
+                  <div className="mt-auto pt-2 border-t border-white/30 text-lg lg:text-xl font-semibold text-white">
+                    {stat.amount}
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Mission/Vision Section */}

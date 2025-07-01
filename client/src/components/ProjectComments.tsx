@@ -1,24 +1,34 @@
-import { useState } from 'react';
+import { useState, useContext } from 'react';
 import { Comment } from '../types/project';
+import { UserContext } from '../context/UserContext';
 
 interface ProjectCommentsProps {
   projectId: string;
   comments: Comment[];
-  onAddComment: (content: string) => Promise<void>;
+  onAddComment: (content: string, userName?: string) => Promise<void>;
 }
 
 const ProjectComments = ({ projectId, comments, onAddComment }: ProjectCommentsProps) => {
+  const { user } = useContext(UserContext);
   const [newComment, setNewComment] = useState('');
+  const [publicName, setPublicName] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newComment.trim()) return;
+    
+    // For public users, require a name
+    if (!user && !publicName.trim()) {
+      alert('Please enter your name to post a comment.');
+      return;
+    }
 
     try {
       setIsSubmitting(true);
-      await onAddComment(newComment.trim());
+      await onAddComment(newComment.trim(), !user ? publicName.trim() : undefined);
       setNewComment('');
+      if (!user) setPublicName('');
     } catch (error) {
       console.error('Error adding comment:', error);
     } finally {
@@ -32,21 +42,44 @@ const ProjectComments = ({ projectId, comments, onAddComment }: ProjectCommentsP
       
       {/* Add Comment Form */}
       <form onSubmit={handleSubmit} className="mb-6">
+        {/* Public user name input */}
+        {!user && (
+          <div className="mb-4">
+            <label htmlFor="publicName" className="block text-sm font-medium text-gray-700 mb-2">
+              Your Name *
+            </label>
+            <input
+              type="text"
+              id="publicName"
+              value={publicName}
+              onChange={(e) => setPublicName(e.target.value)}
+              placeholder="Enter your name"
+              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 sm:text-sm"
+              required
+            />
+          </div>
+        )}
+        
         <div className="mb-4">
+          <label htmlFor="comment" className="block text-sm font-medium text-gray-700 mb-2">
+            Comment
+          </label>
           <textarea
+            id="comment"
             rows={3}
             value={newComment}
             onChange={(e) => setNewComment(e.target.value)}
             placeholder="Share your thoughts about this project..."
             className="block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 sm:text-sm resize-none"
+            required
           />
         </div>
         <div className="flex justify-end">
           <button
             type="submit"
-            disabled={isSubmitting || !newComment.trim()}
+            disabled={isSubmitting || !newComment.trim() || (!user && !publicName.trim())}
             className={`inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white 
-              ${isSubmitting || !newComment.trim() 
+              ${isSubmitting || !newComment.trim() || (!user && !publicName.trim())
                 ? 'bg-gray-400 cursor-not-allowed' 
                 : 'bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500'}`}
           >

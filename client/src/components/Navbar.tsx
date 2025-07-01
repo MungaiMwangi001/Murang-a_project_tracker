@@ -1,10 +1,11 @@
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useState, useRef, useEffect } from 'react';
 
 const Navbar = () => {
   const [isYearDropdownOpen, setIsYearDropdownOpen] = useState(false);
   const [selectedYear, setSelectedYear] = useState('2024/2025');
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const location = useLocation();
 
   const yearOptions = [
     { value: 'all', label: 'All Financial Years' },
@@ -13,6 +14,19 @@ const Navbar = () => {
     { value: '2022/2023', label: 'FY 2022/2023' },
     { value: '2021/2022', label: 'FY 2021/2022' }
   ];
+
+  // Update selected year based on current URL
+  useEffect(() => {
+    const path = location.pathname;
+    const searchParams = new URLSearchParams(location.search);
+    const yearFromQuery = searchParams.get('year');
+    
+    if (yearFromQuery && yearOptions.some(option => option.value === yearFromQuery)) {
+      setSelectedYear(yearFromQuery);
+    } else if (path === '/projects' && !yearFromQuery) {
+      setSelectedYear('all');
+    }
+  }, [location]);
 
   // Handle click outside to close dropdown
   useEffect(() => {
@@ -76,19 +90,54 @@ const Navbar = () => {
             {/* Year Dropdown Menu */}
             {isYearDropdownOpen && (
               <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl border border-gray-100">
-                {yearOptions.map(option => (
-                  <Link
-                    key={option.value}
-                    to={`/projects${option.value === 'all' ? '' : `/${option.value}`}`}
-                    className="block px-4 py-2.5 text-gray-700 hover:bg-green-50 hover:text-green-700 first:rounded-t-lg last:rounded-b-lg"
-                    onClick={() => {
-                      setIsYearDropdownOpen(false);
-                      setSelectedYear(option.value);
-                    }}
-                  >
-                    {option.label}
-                  </Link>
-                ))}
+                <Link
+                  to="/projects"
+                  className="block px-4 py-2.5 text-gray-700 hover:bg-green-50 hover:text-green-700 first:rounded-t-lg"
+                  onClick={() => setIsYearDropdownOpen(false)}
+                >
+                  All Projects
+                </Link>
+                <Link
+                  to="/projects/recent"
+                  className="block px-4 py-2.5 text-gray-700 hover:bg-green-50 hover:text-green-700"
+                  onClick={() => setIsYearDropdownOpen(false)}
+                >
+                  Recent Projects
+                </Link>
+                <Link
+                  to="/projects/sub-county"
+                  className="block px-4 py-2.5 text-gray-700 hover:bg-green-50 hover:text-green-700"
+                  onClick={() => setIsYearDropdownOpen(false)}
+                >
+                  By Sub-County
+                </Link>
+                <Link
+                  to="/projects/department"
+                  className="block px-4 py-2.5 text-gray-700 hover:bg-green-50 hover:text-green-700"
+                  onClick={() => setIsYearDropdownOpen(false)}
+                >
+                  By Department
+                </Link>
+                <div className="border-t border-gray-100">
+                  <div className="px-4 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Filter by Year
+                  </div>
+                  {yearOptions.map(option => (
+                    <Link
+                      key={option.value}
+                      to={`/projects${option.value === 'all' ? '' : `?year=${option.value}`}`}
+                      className="block px-4 py-2.5 text-gray-700 hover:bg-green-50 hover:text-green-700"
+                      onClick={() => {
+                        console.log('Navbar - Selected year:', option.value);
+                        console.log('Navbar - Navigating to:', `/projects${option.value === 'all' ? '' : `?year=${option.value}`}`);
+                        setIsYearDropdownOpen(false);
+                        setSelectedYear(option.value);
+                      }}
+                    >
+                      {option.label}
+                    </Link>
+                  ))}
+                </div>
               </div>
             )}
           </div>

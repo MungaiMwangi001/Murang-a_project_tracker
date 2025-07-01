@@ -2,6 +2,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { Project } from '../types/project';
 import { api } from '../services/api';
+import ProjectComments from '../components/ProjectComments';
+import { Comment } from '../types/project';
 
 const ProjectDetailPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -9,6 +11,9 @@ const ProjectDetailPage = () => {
   const [project, setProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [commentsLoading, setCommentsLoading] = useState(true);
+  const [commentsError, setCommentsError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchProject = async () => {
@@ -33,6 +38,50 @@ const ProjectDetailPage = () => {
 
     fetchProject();
   }, [id]);
+
+  useEffect(() => {
+    if (!id) return;
+    const fetchComments = async () => {
+      setCommentsLoading(true);
+      setCommentsError(null);
+      try {
+        const res = await fetch(`/api/comments/project/${id}`);
+        if (!res.ok) throw new Error('Failed to fetch comments');
+        const data = await res.json();
+        setComments(data.comments || []);
+      } catch (err: any) {
+        setCommentsError(err.message);
+      } finally {
+        setCommentsLoading(false);
+      }
+    };
+    fetchComments();
+  }, [id]);
+
+  const handleAddComment = async (content: string, userName?: string) => {
+    if (!id) return;
+    try {
+      const token = localStorage.getItem('token');
+      const requestBody: any = { projectId: id, content };
+      if (userName) {
+        requestBody.userName = userName;
+      }
+      
+      const res = await fetch('/api/comments', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify(requestBody)
+      });
+      if (!res.ok) throw new Error('Failed to add comment');
+      const data = await res.json();
+      setComments([data.comment, ...comments]);
+    } catch (err) {
+      alert('Failed to add comment. Please try again.');
+    }
+  };
 
   if (loading) {
     return (
@@ -214,6 +263,20 @@ const ProjectDetailPage = () => {
             </div>
           </div>
         )}
+            {/* Comments Section */}
+            <div className="mt-12">
+              {commentsLoading ? (
+                <div className="text-center text-gray-500">Loading comments...</div>
+              ) : commentsError ? (
+                <div className="text-center text-red-500">{commentsError}</div>
+              ) : (
+                <ProjectComments
+                  projectId={id!}
+                  comments={comments}
+                  onAddComment={handleAddComment}
+                />
+              )}
+            </div>
           </div>
           </div>
       </div>

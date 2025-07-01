@@ -1,376 +1,511 @@
-# Project Tracker Backend API
+# Murang'a Project Tracker - Backend
 
-A comprehensive backend API for the Murang'a County Project Tracker system, built with Node.js, Express, TypeScript, and PostgreSQL.
+A robust Node.js backend API for the Murang'a County Project Tracker system. Built with Express, TypeScript, and Prisma ORM for scalable and maintainable server-side development.
 
-## 🎯 Project Overview
+## 🚀 Features
 
-This backend serves a project tracking system for Murang'a County with three user roles:
-- **PUBLIC**: Can view projects and comment
-- **STAFF**: Can manage assigned projects and respond to comments
-- **ADMIN**: Full system access and user management
+### **🔐 Authentication & Authorization**
+- **JWT-based Authentication**: Secure token-based authentication system
+- **Role-based Access Control**: PUBLIC, STAFF, and ADMIN role management
+- **Password Hashing**: bcrypt encryption for secure password storage
+- **Staff Approval Workflow**: Admin approval for new staff accounts
+- **Session Management**: Secure token storage and validation
 
-## 🏗️ Architecture
+### **📊 Project Management API**
+- **CRUD Operations**: Complete Create, Read, Update, Delete for projects
+- **Advanced Filtering**: Multi-criteria project filtering and search
+- **Geographic Organization**: Sub-county and ward-based project organization
+- **Status Tracking**: Real-time project status updates
+- **Budget Management**: Financial tracking and reporting
 
-- **Runtime**: Node.js with TypeScript
-- **Framework**: Express.js
-- **Database**: PostgreSQL with Prisma ORM
-- **Authentication**: JWT tokens
-- **Security**: bcrypt password hashing, helmet, CORS
+### **💬 Communication System**
+- **Public Comments**: Anonymous commenting with user name input
+- **Authenticated Comments**: Staff/admin commenting with account attribution
+- **Real-time Updates**: Immediate comment posting and retrieval
+- **Threaded Discussions**: Support for comment replies
+- **User Attribution**: Clear identification of comment authors
 
-## 📋 Development Phases
+### **🗄️ Database Management**
+- **Prisma ORM**: Type-safe database operations
+- **PostgreSQL**: Robust relational database
+- **Migration System**: Version-controlled database schema changes
+- **Data Integrity**: Foreign key constraints and cascading operations
+- **Query Optimization**: Efficient database queries and indexing
 
-### Phase 1: Database Schema Design ✅
+### **🔧 Development Tools**
+- **TypeScript**: Type safety and better development experience
+- **Hot Reload**: Automatic server restart on code changes
+- **Error Handling**: Comprehensive error management and logging
+- **API Documentation**: Clear endpoint documentation
+- **Testing Support**: Unit and integration testing setup
 
-**Achievements:**
-- Designed comprehensive database schema with three main entities
-- Implemented proper relationships between User, Project, and Comment models
-- Added audit trail fields for tracking who created/edited projects
-- Created role-based enum system (PUBLIC, STAFF, ADMIN)
+## 🛠️ Technology Stack
 
-**Schema Structure:**
-```prisma
-model User {
-  id, name, email, password, role, createdAt, updatedAt
-  projects (as staff), comments, editedProjects, createdProjects
-}
+- **Node.js 18+** - JavaScript runtime
+- **Express 4.18.2** - Web application framework
+- **TypeScript 5.1.6** - Type safety and modern JavaScript features
+- **Prisma 5.2.0** - Database ORM and migration tool
+- **PostgreSQL 14+** - Primary database
+- **bcrypt 5.1.0** - Password hashing
+- **jsonwebtoken 9.0.2** - JWT authentication
+- **cors 2.8.5** - Cross-origin resource sharing
+- **helmet 7.0.0** - Security middleware
 
-model Project {
-  id, title, description, status, priority, dueDate, createdAt, updatedAt
-  staffId, createdById, lastEditedById
-  staff, createdBy, lastEditedBy, comments
-}
+## 📁 Project Structure
 
-model Comment {
-  id, content, createdAt, updatedAt
-  userId, projectId
-  user, project
-}
+```
+server/
+├── src/
+│   ├── controllers/           # Request handlers
+│   │   ├── auth.controller.ts # Authentication logic
+│   │   ├── project.controller.ts # Project CRUD operations
+│   │   ├── comment.controller.ts # Comment management
+│   │   └── user.controller.ts # User management
+│   ├── routes/                # API route definitions
+│   │   ├── auth.routes.ts     # Authentication endpoints
+│   │   ├── project.routes.ts  # Project endpoints
+│   │   ├── comment.routes.ts  # Comment endpoints
+│   │   └── user.routes.ts     # User endpoints
+│   ├── middleware/            # Custom middleware
+│   │   ├── auth.middleware.ts # JWT authentication
+│   │   └── error.middleware.ts # Error handling
+│   ├── services/              # Business logic
+│   │   └── auth.service.ts    # Authentication service
+│   ├── utils/                 # Utility functions
+│   │   ├── jwt.utils.ts       # JWT helper functions
+│   │   └── password.utils.ts  # Password utilities
+│   ├── types/                 # TypeScript type definitions
+│   │   └── index.ts          # Shared types
+│   └── index.ts              # Application entry point
+├── prisma/                    # Database schema and migrations
+│   ├── schema.prisma         # Database schema definition
+│   ├── migrations/           # Database migration files
+│   └── migration_lock.toml   # Migration lock file
+├── scripts/                   # Utility scripts
+│   └── updateAdminPassword.ts # Admin password update script
+├── package.json              # Dependencies and scripts
+├── tsconfig.json             # TypeScript configuration
+└── nodemon.json              # Development server configuration
 ```
 
-**Problems Encountered:**
-- Initial schema had only USER/ADMIN roles, needed to add STAFF role
-- Missing audit trail fields for project tracking
-- Schema relationships needed clarification for staff assignment
+## 🚀 Quick Start
 
-**Solutions:**
-- Updated Role enum to include PUBLIC, STAFF, ADMIN
-- Added createdById and lastEditedById fields to Project model
-- Implemented proper foreign key relationships with cascade deletes
+### **Prerequisites**
+- Node.js 18+ installed
+- PostgreSQL 14+ installed and running
+- Git for version control
 
-### Phase 2: Authentication & Authorization ✅
-
-**Achievements:**
-- Implemented JWT-based authentication system
-- Created comprehensive middleware for role-based access control
-- Added project ownership verification for staff members
-- Implemented secure password hashing with bcrypt
-
-**Features Implemented:**
-- User registration and login
-- JWT token generation and verification
-- Role-based route protection
-- Project ownership middleware
-- Logout functionality
-
-**Problems Encountered:**
-- JWT token validation errors due to missing JWT_SECRET
-- Route conflicts between different API endpoints
-- Middleware parameter extraction issues
-
-**Solutions:**
-- Created proper .env file with JWT_SECRET
-- Separated route mounting to avoid conflicts (/api/projects, /api/comments, /api/users)
-- Fixed middleware to use correct parameter names (req.params.id vs req.params.projectId)
-
-### Phase 3: Project Management ✅
-
-**Achievements:**
-- Complete CRUD operations for projects
-- Staff assignment and ownership tracking
-- Project filtering and search capabilities
-- Audit trail implementation
-
-**API Endpoints:**
-- `GET /api/projects` - Get all projects (public)
-- `GET /api/projects/:id` - Get project by ID (public)
-- `POST /api/projects` - Create project (staff/admin)
-- `PUT /api/projects/:id` - Update project (staff/admin)
-- `DELETE /api/projects/:id` - Delete project (admin only)
-- `GET /api/projects/staff/projects` - Get staff's projects
-
-**Problems Encountered:**
-- Project ownership middleware looking for wrong parameter
-- Staff assignment validation issues
-- Route mounting conflicts
-
-**Solutions:**
-- Fixed middleware to use req.params.id instead of req.params.projectId
-- Added proper staff role validation in project creation
-- Separated route mounting to prevent conflicts
-
-### Phase 4: Comment System ✅
-
-**Achievements:**
-- Complete comment CRUD operations
-- Role-based comment permissions
-- Comment filtering by project and user
-- Proper user authorization for comment management
-
-**API Endpoints:**
-- `GET /api/comments/projects/:projectId` - Get project comments (public)
-- `POST /api/comments` - Create comment (authenticated users)
-- `PUT /api/comments/:id` - Update comment (owner/staff/admin)
-- `DELETE /api/comments/:id` - Delete comment (owner/staff/admin)
-- `GET /api/comments/users/:userId` - Get user comments
-
-**Permission System:**
-- Users can edit/delete their own comments
-- Staff can manage comments on their assigned projects
-- Admins can manage all comments
-
-### Phase 5: User Management ✅
-
-**Achievements:**
-- Complete user CRUD operations (admin only)
-- Role assignment and management
-- Staff member listing and statistics
-- User activity tracking
-
-**API Endpoints:**
-- `GET /api/users` - Get all users (admin)
-- `GET /api/users/staff` - Get staff members (admin)
-- `GET /api/users/:id` - Get user by ID (admin)
-- `POST /api/users` - Create user (admin)
-- `PUT /api/users/:id` - Update user (admin)
-- `DELETE /api/users/:id` - Delete user (admin)
-
-**Security Features:**
-- Admin cannot delete themselves
-- Role validation for user creation/updates
-- Email uniqueness validation
-
-## 🔐 Authentication & Authorization
-
-### JWT Token Structure
-```javascript
-{
-  id: "user_id",
-  email: "user@example.com",
-  role: "ADMIN|STAFF|PUBLIC",
-  iat: timestamp,
-  exp: timestamp
-}
+### **1. Install Dependencies**
+```bash
+cd Murang-a_project_tracker/server
+npm install
 ```
 
-### Middleware Stack
-1. **verifyToken**: Validates JWT and adds user to request
-2. **requireRole**: Checks if user has required role
-3. **requireProjectOwnership**: Verifies staff can access project
+### **2. Environment Configuration**
+Create a `.env` file in the server directory:
+```env
+# Database Configuration
+DATABASE_URL="postgresql://username:password@localhost:5432/muranga_project_tracker"
 
-### Role Permissions
-- **PUBLIC**: View projects, create/edit own comments
-- **STAFF**: Manage assigned projects, respond to comments
-- **ADMIN**: Full system access, user management
+# JWT Configuration
+JWT_SECRET="your-super-secret-jwt-key-here"
+
+# Server Configuration
+PORT=5000
+NODE_ENV=development
+
+# Optional: CORS Configuration
+CORS_ORIGIN="http://localhost:5173"
+```
+
+### **3. Database Setup**
+```bash
+# Generate Prisma client
+npx prisma generate
+
+# Run database migrations
+npx prisma migrate dev
+
+# (Optional) Seed database with initial data
+npx prisma db seed
+```
+
+### **4. Start Development Server**
+```bash
+npm run dev
+```
+
+### **5. Verify Installation**
+The API will be running at: http://localhost:5000
+
+Test the health endpoint: http://localhost:5000/api/health
+
+## 📋 Available Scripts
+
+```bash
+# Start development server with hot reload
+npm run dev
+
+# Start production server
+npm start
+
+# Build TypeScript to JavaScript
+npm run build
+
+# Run TypeScript compiler in watch mode
+npm run watch
+
+# Run database migrations
+npm run migrate
+
+# Generate Prisma client
+npm run prisma:generate
+
+# Open Prisma Studio (database GUI)
+npm run prisma:studio
+
+# Reset database (WARNING: deletes all data)
+npm run db:reset
+```
+
+## 🔌 API Endpoints
+
+### **Authentication**
+```
+POST   /api/auth/login          # User login
+POST   /api/auth/register       # Staff registration
+POST   /api/auth/logout         # User logout
+GET    /api/auth/me             # Get current user
+PUT    /api/auth/approve-staff  # Approve staff account (admin only)
+```
+
+### **Projects**
+```
+GET    /api/projects            # Get all projects with filters
+GET    /api/projects/:id        # Get specific project
+POST   /api/projects            # Create new project (staff/admin)
+PUT    /api/projects/:id        # Update project (staff/admin)
+DELETE /api/projects/:id        # Delete project (admin only)
+GET    /api/projects/stats      # Get project statistics
+```
+
+### **Comments**
+```
+GET    /api/comments/:projectId # Get project comments
+POST   /api/comments            # Add new comment
+PUT    /api/comments/:id        # Update comment (author only)
+DELETE /api/comments/:id        # Delete comment (author/admin)
+```
+
+### **Users**
+```
+GET    /api/users               # Get all users (admin only)
+GET    /api/users/:id           # Get specific user
+PUT    /api/users/:id           # Update user profile
+DELETE /api/users/:id           # Delete user (admin only)
+```
 
 ## 🗄️ Database Schema
 
-### Enums
-```prisma
-enum Role {
-  PUBLIC
-  STAFF
-  ADMIN
-}
-
-enum ProjectStatus {
-  PLANNING
-  IN_PROGRESS
-  REVIEW
-  COMPLETED
-  ON_HOLD
-  CANCELLED
-}
-
-enum Priority {
-  LOW
-  MEDIUM
-  HIGH
-  URGENT
-}
+### **Users Table**
+```sql
+CREATE TABLE "User" (
+  "id" SERIAL PRIMARY KEY,
+  "email" VARCHAR(255) UNIQUE NOT NULL,
+  "password" VARCHAR(255) NOT NULL,
+  "role" "UserRole" NOT NULL DEFAULT 'PUBLIC',
+  "isApproved" BOOLEAN NOT NULL DEFAULT false,
+  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "updatedAt" TIMESTAMP(3) NOT NULL
+);
 ```
 
-### Key Relationships
-- One staff member per project (avoid conflicts)
-- Users can have multiple comments
-- Projects can have multiple comments
-- Audit trail for project creation and editing
+### **Projects Table**
+```sql
+CREATE TABLE "Project" (
+  "id" SERIAL PRIMARY KEY,
+  "title" VARCHAR(255) NOT NULL,
+  "description" TEXT,
+  "subCounty" VARCHAR(255) NOT NULL,
+  "ward" VARCHAR(255) NOT NULL,
+  "department" VARCHAR(255) NOT NULL,
+  "status" "ProjectStatus" NOT NULL DEFAULT 'PLANNING',
+  "budgetedCost" DECIMAL(15,2),
+  "contractCost" DECIMAL(15,2),
+  "financialYear" VARCHAR(9) NOT NULL,
+  "contractPeriod" VARCHAR(255),
+  "startDate" DATE,
+  "endDate" DATE,
+  "implementationStatus" TEXT,
+  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "updatedAt" TIMESTAMP(3) NOT NULL
+);
+```
 
-## 🚀 API Endpoints
+### **Comments Table**
+```sql
+CREATE TABLE "Comment" (
+  "id" SERIAL PRIMARY KEY,
+  "content" TEXT NOT NULL,
+  "userName" VARCHAR(255) NOT NULL,
+  "userId" INTEGER REFERENCES "User"("id") ON DELETE SET NULL,
+  "projectId" INTEGER NOT NULL REFERENCES "Project"("id") ON DELETE CASCADE,
+  "parentId" INTEGER REFERENCES "Comment"("id") ON DELETE CASCADE,
+  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "updatedAt" TIMESTAMP(3) NOT NULL
+);
+```
 
-### Authentication
-- `POST /auth/register` - User registration
-- `POST /auth/login` - User login
-- `POST /auth/logout` - User logout
-- `POST /auth/create-admin` - Create initial admin (testing)
+## 🔧 Key Components
 
-### Projects
-- `GET /api/projects` - List all projects
-- `GET /api/projects/:id` - Get project details
-- `POST /api/projects` - Create project
-- `PUT /api/projects/:id` - Update project
-- `DELETE /api/projects/:id` - Delete project
+### **Authentication Middleware**
+```typescript
+// Middleware for protecting routes
+const authenticateToken = (req: Request, res: Response, next: NextFunction) => {
+  const token = req.headers.authorization?.split(' ')[1];
+  if (!token) return res.status(401).json({ error: 'Access token required' });
+  
+  jwt.verify(token, process.env.JWT_SECRET!, (err: any, user: any) => {
+    if (err) return res.status(403).json({ error: 'Invalid token' });
+    req.user = user;
+    next();
+  });
+};
+```
 
-### Comments
-- `GET /api/comments/projects/:projectId` - Get project comments
-- `POST /api/comments` - Create comment
-- `PUT /api/comments/:id` - Update comment
-- `DELETE /api/comments/:id` - Delete comment
+### **Project Controller**
+```typescript
+// Example project filtering
+const getProjects = async (req: Request, res: Response) => {
+  try {
+    const { status, subCounty, ward, department, financialYear } = req.query;
+    
+    const where: any = {};
+    if (status) where.status = status;
+    if (subCounty) where.subCounty = subCounty;
+    if (ward) where.ward = ward;
+    if (department) where.department = department;
+    if (financialYear) where.financialYear = financialYear;
+    
+    const projects = await prisma.project.findMany({
+      where,
+      include: { comments: true }
+    });
+    
+    res.json(projects);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch projects' });
+  }
+};
+```
 
-### Users
-- `GET /api/users` - List all users (admin)
-- `GET /api/users/staff` - List staff members (admin)
-- `POST /api/users` - Create user (admin)
-- `PUT /api/users/:id` - Update user (admin)
-- `DELETE /api/users/:id` - Delete user (admin)
+### **Comment System**
+```typescript
+// Public comment posting
+const addComment = async (req: Request, res: Response) => {
+  try {
+    const { content, userName, projectId, parentId } = req.body;
+    const userId = req.user?.id; // Optional for public comments
+    
+    const comment = await prisma.comment.create({
+      data: {
+        content,
+        userName: userName || req.user?.email,
+        userId,
+        projectId,
+        parentId
+      }
+    });
+    
+    res.status(201).json(comment);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to add comment' });
+  }
+};
+```
 
-## 🛠️ Setup Instructions
+## 🎯 Recent Updates
 
-### Prerequisites
-- Node.js (v16+)
-- PostgreSQL database
-- npm or yarn
+### **Public Comments System** ✅
+- **Anonymous commenting**: Public users can post comments with name input
+- **User attribution**: Clear identification of comment authors
+- **Threaded discussions**: Support for comment replies
+- **Real-time updates**: Comments appear immediately after posting
 
-### Installation
-1. Clone the repository
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
-3. Create `.env` file:
-   ```env
-   DATABASE_URL="postgresql://username:password@localhost:5432/project_tracker"
-   JWT_SECRET="your-super-secret-jwt-key-change-this-in-production"
-   PORT=3000
-   ```
-4. Run database migrations:
-   ```bash
-   npx prisma migrate dev
-   ```
-5. Generate Prisma client:
-   ```bash
-   npx prisma generate
-   ```
-6. Start the server:
-   ```bash
-   npm run dev
-   ```
+### **Constituency → Sub-County Rename** ✅
+- **Database migration**: Updated schema to use `subCounty` instead of `constituency`
+- **API endpoints**: Updated all references in routes and controllers
+- **Data migration**: Preserved existing data during schema changes
+- **Type definitions**: Updated TypeScript interfaces
 
-### Database Setup
+### **Enhanced Error Handling** ✅
+- **Comprehensive error middleware**: Centralized error handling
+- **Validation errors**: Detailed validation error messages
+- **Database error handling**: Proper handling of database constraints
+- **Security improvements**: Input validation and sanitization
+
+## 🔧 Common Issues & Solutions
+
+### **Database Connection Issues**
 ```bash
-# Reset database (development only)
-npx prisma migrate reset --force
-
-# Create initial admin
-POST /auth/create-admin
+# Error: Connection refused
+# Solution: Ensure PostgreSQL is running
+sudo service postgresql start  # Linux
+brew services start postgresql  # macOS
+# Windows: Start PostgreSQL service from Services
 ```
+
+### **Prisma Migration Issues**
+```bash
+# Error: Migration conflicts
+# Solution: Reset and regenerate
+npx prisma migrate reset
+npx prisma migrate dev --name init
+```
+
+### **JWT Token Issues**
+```bash
+# Error: JWT_SECRET not defined
+# Solution: Add JWT_SECRET to .env file
+echo "JWT_SECRET=your-super-secret-key" >> .env
+```
+
+### **Port Conflicts**
+```bash
+# Error: Port 5000 already in use
+# Solution: Change port or kill process
+lsof -ti:5000 | xargs kill -9  # Kill process on port 5000
+# Or change PORT in .env file
+```
+
+### **TypeScript Compilation Errors**
+```bash
+# Error: Type definitions missing
+# Solution: Install missing types
+npm install --save-dev @types/node @types/express @types/bcrypt @types/jsonwebtoken
+```
+
+### **Database Schema Issues**
+```bash
+# Error: Schema out of sync
+# Solution: Regenerate Prisma client
+npx prisma generate
+npx prisma migrate dev
+```
+
+## 🔒 Security Considerations
+
+### **Authentication Security**
+- JWT tokens with expiration
+- Secure password hashing with bcrypt
+- Role-based access control
+- Input validation and sanitization
+
+### **Database Security**
+- Parameterized queries (Prisma ORM)
+- Foreign key constraints
+- Data validation at schema level
+- Regular security updates
+
+### **API Security**
+- CORS configuration
+- Helmet.js security headers
+- Rate limiting (recommended)
+- Input validation middleware
 
 ## 🧪 Testing
 
-### Test Flow
-1. Create admin user
-2. Login to get JWT token
-3. Create staff user
-4. Login as staff to get staff token
-5. Create projects and comments
-6. Test role-based permissions
+### **API Testing with Postman**
+1. Import the API collection
+2. Set up environment variables
+3. Test authentication endpoints first
+4. Test protected endpoints with valid tokens
 
-### Example Test Requests
+### **Database Testing**
 ```bash
-# Create admin
-curl -X POST http://localhost:3000/auth/create-admin
+# Test database connection
+npx prisma db pull
 
-# Login
-curl -X POST http://localhost:3000/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"email":"admin@muranga.gov.ke","password":"admin123"}'
+# Test migrations
+npx prisma migrate dev --name test
 
-# Get users (with token)
-curl -X GET http://localhost:3000/api/users \
-  -H "Authorization: Bearer YOUR_TOKEN"
+# Reset test database
+npx prisma migrate reset
 ```
 
-## 🔧 Development Commands
-
+### **Load Testing**
 ```bash
-# Development
-npm run dev
+# Install artillery for load testing
+npm install -g artillery
 
-# Build
+# Run load test
+artillery run load-test.yml
+```
+
+## 📊 Monitoring & Logging
+
+### **Error Logging**
+```typescript
+// Example error logging
+app.use((error: Error, req: Request, res: Response, next: NextFunction) => {
+  console.error('Error:', error);
+  res.status(500).json({ error: 'Internal server error' });
+});
+```
+
+### **Performance Monitoring**
+- API response times
+- Database query performance
+- Memory usage monitoring
+- Error rate tracking
+
+## 🔄 Deployment
+
+### **Production Build**
+```bash
 npm run build
-
-# Production
 npm start
-
-# Database
-npx prisma studio
-npx prisma migrate dev
-npx prisma generate
 ```
 
-## 📊 Current Status
+### **Environment Variables for Production**
+```env
+DATABASE_URL="postgresql://prod_user:prod_password@prod_host:5432/prod_db"
+JWT_SECRET="production-super-secret-key"
+NODE_ENV=production
+PORT=5000
+CORS_ORIGIN="https://your-frontend-domain.com"
+```
 
-### ✅ Completed Features
-- [x] Database schema design and implementation
-- [x] Authentication and authorization system
-- [x] Project management (CRUD)
-- [x] Comment system (CRUD)
-- [x] User management (admin)
-- [x] Role-based access control
-- [x] Audit trail implementation
-- [x] API testing and validation
-
-### 🔄 Next Steps
-- [ ] Frontend integration
-- [ ] Image upload functionality
-- [ ] Advanced search and filtering
-- [ ] Real-time notifications
-- [ ] API documentation (Swagger)
-- [ ] Production deployment
-
-## 🐛 Known Issues & Solutions
-
-### Issue 1: JWT Token Validation Errors
-**Problem**: "Token is invalid or expired" errors
-**Solution**: Ensure JWT_SECRET is properly set in .env file
-
-### Issue 2: Route Conflicts
-**Problem**: Middleware errors due to overlapping routes
-**Solution**: Separated route mounting (/api/projects, /api/comments, /api/users)
-
-### Issue 3: Parameter Extraction
-**Problem**: Middleware looking for wrong parameter names
-**Solution**: Fixed to use req.params.id instead of req.params.projectId
-
-### Issue 4: Database Migration Errors
-**Problem**: Transaction errors during schema updates
-**Solution**: Use `npx prisma migrate reset --force` for clean migrations
-
-## 📝 Notes
-
-- All timestamps are in UTC
-- Passwords are hashed using bcrypt
-- JWT tokens expire after 7 days
-- Cascade deletes are implemented for data integrity
-- Admin users cannot delete themselves (safety feature)
+### **Docker Deployment**
+```dockerfile
+FROM node:18-alpine
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --only=production
+COPY . .
+RUN npm run build
+EXPOSE 5000
+CMD ["npm", "start"]
+```
 
 ## 🤝 Contributing
 
-1. Follow TypeScript best practices
-2. Add proper error handling
-3. Include JSDoc comments for functions
-4. Test all endpoints before committing
-5. Update this README for new features
+1. Follow the existing code style and patterns
+2. Use TypeScript for all new code
+3. Add proper error handling
+4. Write tests for new features
+5. Update API documentation
+6. Follow security best practices
 
-## 📄 License
+## 📞 Support
 
-This project is part of the Murang'a County Project Tracker system. 
+For backend-specific issues:
+- Check server logs for error messages
+- Verify database connectivity
+- Test API endpoints with Postman
+- Review TypeScript compilation errors
+- Check environment variable configuration
+
+---
+
+**Backend Development Team** 🚀 

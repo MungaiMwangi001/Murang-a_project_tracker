@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useContext } from "react";
+import { useNavigate } from "react-router-dom";
 import { UserContext } from "../context/UserContext";
 import { BellIcon, UserGroupIcon, ClipboardIcon, UserPlusIcon, ClockIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
 import { api } from '../services/api';
@@ -21,6 +22,7 @@ interface User {
 
 const AdminDashboard: React.FC = () => {
   const { user } = useContext(UserContext);
+  const navigate = useNavigate();
   const [users, setUsers] = useState<User[]>([]);
   const [projects, setProjects] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -233,26 +235,38 @@ const AdminDashboard: React.FC = () => {
         </div>
         {/* Summary Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-          <div className="bg-white rounded-xl shadow p-6 flex flex-col items-center hover:shadow-lg transition">
+          <button 
+            onClick={() => {/* TODO: Navigate to users management */}}
+            className="bg-white rounded-xl shadow p-6 flex flex-col items-center hover:shadow-lg transition cursor-pointer hover:bg-blue-50"
+          >
             <UserGroupIcon className="h-8 w-8 text-blue-700 mb-2" />
             <span className="text-3xl font-bold text-blue-700">{totalUsers}</span>
             <span className="text-gray-500 mt-2">Total Users</span>
-          </div>
-          <div className="bg-white rounded-xl shadow p-6 flex flex-col items-center hover:shadow-lg transition">
+          </button>
+          <button 
+            onClick={() => navigate('/projects')}
+            className="bg-white rounded-xl shadow p-6 flex flex-col items-center hover:shadow-lg transition cursor-pointer hover:bg-green-50"
+          >
             <ClipboardIcon className="h-8 w-8 text-green-700 mb-2" />
             <span className="text-3xl font-bold text-green-700">{totalProjects}</span>
             <span className="text-gray-500 mt-2">Total Projects</span>
-          </div>
-          <div className="bg-white rounded-xl shadow p-6 flex flex-col items-center hover:shadow-lg transition">
+          </button>
+          <button 
+            onClick={() => {/* TODO: Navigate to pending staff approvals */}}
+            className="bg-white rounded-xl shadow p-6 flex flex-col items-center hover:shadow-lg transition cursor-pointer hover:bg-yellow-50"
+          >
             <UserPlusIcon className="h-8 w-8 text-yellow-600 mb-2" />
             <span className="text-3xl font-bold text-yellow-600">{pendingStaff}</span>
             <span className="text-gray-500 mt-2">Pending Staff Approvals</span>
-          </div>
-          <div className="bg-white rounded-xl shadow p-6 flex flex-col items-center hover:shadow-lg transition">
+          </button>
+          <button 
+            onClick={() => navigate('/projects?status=not_started')}
+            className="bg-white rounded-xl shadow p-6 flex flex-col items-center hover:shadow-lg transition cursor-pointer hover:bg-purple-50"
+          >
             <CheckCircleIcon className="h-8 w-8 text-purple-700 mb-2" />
             <span className="text-3xl font-bold text-purple-700">{pendingProjects}</span>
             <span className="text-gray-500 mt-2">Projects Pending Approval</span>
-          </div>
+          </button>
         </div>
         {/* Quick Actions */}
         <div className="flex flex-wrap gap-4 mb-10">
@@ -264,13 +278,13 @@ const AdminDashboard: React.FC = () => {
           </button>
           <button
             className="flex items-center px-4 py-2 bg-green-100 text-green-800 rounded-lg shadow hover:bg-green-200 transition"
-            // onClick={() => {/* TODO: View all projects */}}
+            onClick={() => navigate('/projects')}
           >
             <ClipboardIcon className="h-5 w-5 mr-2" /> All Projects
           </button>
           <button
             className="flex items-center px-4 py-2 bg-yellow-100 text-yellow-800 rounded-lg shadow hover:bg-yellow-200 transition"
-            // onClick={() => {/* TODO: View pending approvals */}}
+            onClick={() => navigate('/projects?status=not_started')}
           >
             <ClockIcon className="h-5 w-5 mr-2" /> Pending Approvals
           </button>

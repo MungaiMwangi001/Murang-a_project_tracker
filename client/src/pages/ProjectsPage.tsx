@@ -11,11 +11,12 @@ const ProjectsPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { year } = useParams();
+  const { subCountyName } = useParams();
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedSection, setSelectedSection] = useState<'recent' | 'constituency' | 'department' | null>(null);
-  const [selectedConstituency, setSelectedConstituency] = useState<string | null>(null);
+  const [selectedSection, setSelectedSection] = useState<'recent' | 'subCounty' | 'department' | null>(null);
+  const [selectedSubCounty, setSelectedSubCounty] = useState<string>('Kangema');
   const [selectedWard, setSelectedWard] = useState<string | null>(null);
   const [selectedDepartment, setSelectedDepartment] = useState<string | null>(null);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
@@ -31,87 +32,62 @@ const ProjectsPage = () => {
     { value: 'under_procurement', label: 'Under Procurement', color: 'purple' }
   ];
 
-  const constituencyData = [
-    {
-      name: "Kangema",
-      wards: ["Kanyenya-Ini", "Muguru", "Rwathia"]
-    },
-    {
-      name: "Mathioya",
-      wards: ["Gitugi", "Kiru", "Kamacharia"]
-    },
-    {
-      name: "Kiharu",
-      wards: ["Wangu", "Mugoiri", "Mbiri", "Township", "Murarandia", "Gaturi"]
-    },
-    {
-      name: "Kigumo",
-      wards: ["Kahumbu", "Muthithi", "Kigumo", "Kangari", "Kinyona"]
-    },
-    {
-      name: "Maragwa",
-      wards: ["Kimorori/Wempa", "Makuyu", "Kambiti", "Kamahuhu", "Ichagaki", "Nginda"]
-    },
-    {
-      name: "Kandara",
-      wards: ["Ng'araria", "Muruka", "Kagundu-Ini", "Gaichanjiru", "Ithiru", "Ruchu"]
-    },
-    {
-      name: "Gatanga",
-      wards: ["Ithanga", "Kakuzi/Mitubiri", "Mugumo-Ini", "Kihumbu-Ini", "Gatanga", "Kariara"]
-    }
+  const subCountyData = [
+    { name: "Kangema", wards: ["Rwathia", "Muguru", "Kangema"] },
+    { name: "Mathioya", wards: ["Gitugi", "Kiru", "Kamacharia"] },
+    { name: "Kiharu", wards: ["Wangu", "Mugoiri", "Mbiri", "Township", "Murarandia", "Gaturi"] },
+    { name: "Kigumo", wards: ["Kahumbu", "Muthithi", "Kigumo", "Kangari", "Kinyona"] },
+    { name: "Maragua", wards: ["Kimorori/Wempa", "Makuyu", "Kambiti", "Kamahuha", "Ichagaki", "Nginda"] },
+    { name: "Kandara", wards: ["Muruka", "Kihumbu-ini", "Ithiru", "Ng'araria", "Kandara"] },
+    { name: "Gatanga", wards: ["Kigumo", "Ichichi", "Kihoya", "Karuri", "Kandara", "Gitugi", "Cabros Kihumbuini", "Mununga", "Kamune"] }
   ];
 
   const departments = [
-    {
-      name: "ICT & Public Administration",
-      subDepartments: ["ICT", "Public Administration"]
-    },
-    {
-      name: "Agriculture, Livestock and Cooperatives",
-      subDepartments: ["Agriculture", "Livestock", "Cooperatives"]
-    },
-    {
-      name: "Trade, Industrialization & Tourism",
-      subDepartments: ["Trade"]
-    },
-    {
-      name: "Health",
-      subDepartments: ["Health"]
-    },
-    {
-      name: "Water, Irrigation, Environment & Natural Resources",
-      subDepartments: []
-    },
-    {
-      name: "Youth Affairs, Culture & Social Services",
-      subDepartments: []
-    },
-    {
-      name: "Education and Technical Training",
-      subDepartments: []
-    },
-    {
-      name: "Lands, Physical Planning & Urban Development",
-      subDepartments: []
-    },
-    {
-      name: "County Attorney",
-      subDepartments: []
-    },
-    {
-      name: "Roads, Housing & Infrastructure",
-      subDepartments: []
-    }
+    "ICT & Public Administration",
+    "Agriculture, Livestock and Cooperatives",
+    "Trade, Industrialization & Tourism",
+    "Health",
+    "Water, Irrigation, Environment & Natural Resources",
+    "Youth Affairs, Culture & Social Services",
+    "Education and Technical Training",
+    "Lands, Physical Planning & Urban Development",
+    "County Attorney",
+    "Roads, Housing & Infrastructure"
   ];
 
-  // Determine the current section from the URL
+  // Determine the current section from the URL and set subCounty from URL params
   useEffect(() => {
     const path = location.pathname;
+    const searchParams = new URLSearchParams(location.search);
+    const yearFromQuery = searchParams.get('year');
+    const statusFromQuery = searchParams.get('status');
+    
+    console.log('ProjectsPage - Current path:', path);
+    console.log('ProjectsPage - Year param:', year);
+    console.log('ProjectsPage - Year from query:', yearFromQuery);
+    console.log('ProjectsPage - Status from query:', statusFromQuery);
+    console.log('ProjectsPage - SubCounty param:', subCountyName);
+    
+    // Set status filter from query parameter if present
+    if (statusFromQuery) {
+      setSelectedStatus(statusFromQuery);
+    }
+    
+    // Check if this is a project ID route (format: /projects/123)
+    if (year && !isNaN(Number(year))) {
+      console.log('ProjectsPage - Detected project ID route');
+      // This is a project ID route, not a financial year
+      return;
+    }
+    
     if (path.includes('/recent')) {
       setSelectedSection('recent');
-    } else if (path.includes('/constituency')) {
-      setSelectedSection('constituency');
+    } else if (path.includes('/sub-county')) {
+      setSelectedSection('subCounty');
+      // Set subCounty from URL parameter if available
+      if (subCountyName) {
+        setSelectedSubCounty(decodeURIComponent(subCountyName));
+      }
     } else if (path.includes('/department')) {
       setSelectedSection('department');
       // Extract department from URL if present
@@ -123,174 +99,43 @@ const ProjectsPage = () => {
     } else {
       setSelectedSection('recent'); // Default to recent if no section specified
     }
-  }, [location]);
+  }, [location, subCountyName, year]);
 
   useEffect(() => {
     const fetchProjects = async () => {
       try {
         setLoading(true);
         setError(null);
+        // Fetch real projects from backend
+        const token = localStorage.getItem('token');
+        const res = await fetch('/api/projects', {
+          headers: token ? { Authorization: `Bearer ${token}` } : {}
+        });
+        if (!res.ok) throw new Error('Failed to fetch projects');
+        const data = await res.json();
+        const allProjects = data.projects || data;
         
-        // Simulated data for testing - replace with actual API call
-        const mockProjects: Project[] = [
-          {
-            id: '1',
-            title: 'Water Supply Project - Phase 1',
-            description: 'Installation of water supply infrastructure in rural areas',
-            status: 'ongoing',
-            budgetedCost: 5000000,
-            sourceOfFunds: 'County Development Fund',
-            progress: 65,
-            department: 'Water and Sanitation',
-            directorate: 'Water Resources',
-            contractName: 'Rural Water Supply Initiative 2024',
-            lpoNumber: 'LPO-2024-001',
-            contractNumber: 'CNT-2024-001',
-            contractor: 'Maji Solutions Ltd',
-            contractPeriod: '12 months',
-            contractStartDate: '2024-01-15',
-            contractEndDate: '2025-01-14',
-            contractCost: 4800000,
-            implementationStatus: 'On Schedule',
-            amountPaidToDate: 3120000,
-            recommendations: 'Project progressing well, maintain current pace',
-            pmc: 'Water Development Committee',
-            lastUpdated: '2024-03-10',
-            constituency: 'Kiharu',
-            ward: 'Township',
-            financialYear: '2024/2025',
-            images: [
-              '/images/projects/water-supply-1.jpg',
-              '/images/projects/water-supply-2.jpg',
-            ],
-            comments: [
-              {
-                id: '1',
-                userId: 'user1',
-                userName: 'John Kamau',
-                content: 'The water pressure in our area has significantly improved since this project started. Looking forward to its completion.',
-                timestamp: '2024-03-08T10:30:00Z',
-                replies: [
-                  {
-                    id: '2',
-                    userId: 'user2',
-                    userName: 'Project Manager',
-                    content: 'Thank you for the feedback, John. We\'re working to ensure consistent water supply across all areas.',
-                    timestamp: '2024-03-08T14:15:00Z'
-                  }
-                ]
-              },
-              {
-                id: '3',
-                userId: 'user3',
-                userName: 'Mary Wanjiku',
-                content: 'When will the project reach Mihuti area? We\'re still experiencing water shortages.',
-                timestamp: '2024-03-09T09:45:00Z'
-              }
-            ]
-          },
-          {
-            id: '2',
-            title: 'Healthcare Center Upgrade',
-            description: 'Modernization of existing healthcare facilities',
-            status: 'completed',
-            budgetedCost: 8000000,
-            sourceOfFunds: 'Health Sector Support Fund',
-            progress: 100,
-            department: 'Health',
-            directorate: 'Medical Services',
-            contractName: 'Health Facilities Upgrade 2023',
-            lpoNumber: 'LPO-2023-045',
-            contractNumber: 'CNT-2023-089',
-            contractor: 'HealthBuild Construction Ltd',
-            contractPeriod: '8 months',
-            contractStartDate: '2023-06-01',
-            contractEndDate: '2024-01-31',
-            contractCost: 7800000,
-            implementationStatus: 'Completed',
-            amountPaidToDate: 7800000,
-            recommendations: 'Facility ready for commissioning',
-            pmc: 'Health Services Committee',
-            lastUpdated: '2024-02-28',
-            constituency: 'Kandara',
-            ward: 'Muruka',
-            financialYear: '2023/2024',
-            images: [
-              '/images/projects/health-center-1.jpg',
-              '/images/projects/health-center-2.jpg',
-            ],
-            comments: [
-              {
-                id: '4',
-                userId: 'user4',
-                userName: 'James Mwangi',
-                content: 'The new facilities are impressive. The waiting area is much more comfortable now.',
-                timestamp: '2024-02-25T11:20:00Z'
-              },
-              {
-                id: '5',
-                userId: 'user5',
-                userName: 'Sarah Njeri',
-                content: 'Great improvement in service delivery. Hope to see more such upgrades in other facilities.',
-                timestamp: '2024-02-27T16:05:00Z',
-                replies: [
-                  {
-                    id: '6',
-                    userId: 'user6',
-                    userName: 'Health Officer',
-                    content: 'We\'re glad to hear about the improved services. More facility upgrades are planned for this year.',
-                    timestamp: '2024-02-28T08:30:00Z'
-                  }
-                ]
-              }
-            ]
-          },
-          // Add more mock projects as needed
-        ];
-
-        let filteredData = mockProjects;
+        // Filter by financial year if specified in query parameters
+        const searchParams = new URLSearchParams(location.search);
+        const yearFromQuery = searchParams.get('year');
         
-        // First apply year filter if specified
-        if (year && year !== 'all') {
-          filteredData = mockProjects.filter(project => 
-            project.financialYear === year
+        if (yearFromQuery && yearFromQuery !== 'all') {
+          console.log('ProjectsPage - Filtering by year:', yearFromQuery);
+          const filteredProjects = allProjects.filter((project: Project) => 
+            project.financialYear === yearFromQuery
           );
-          // When specific year is selected, show all projects from that year
-          setSelectedSection('recent');
+          setProjects(filteredProjects);
         } else {
-          // If no year or 'all' is selected, apply section filters
-          if (selectedSection === 'recent') {
-            // Show most recent projects
-            filteredData = mockProjects.slice(0, 13);
-          } else if (selectedSection === 'constituency' && selectedConstituency) {
-            filteredData = mockProjects.filter(project => 
-              project.constituency === selectedConstituency
-            );
-          } else if (selectedSection === 'department' && selectedDepartment) {
-            filteredData = mockProjects.filter(project => 
-              project.department === selectedDepartment
-            );
-          }
+          setProjects(allProjects);
         }
-
-        // Apply status filter if not 'all'
-        if (selectedStatus !== 'all') {
-          filteredData = filteredData.filter(project => 
-            project.status.toLowerCase() === selectedStatus
-          );
-        }
-        
-        setProjects(filteredData);
-      } catch (err) {
-        setError('Failed to load projects. Please try again later.');
-        console.error('Error fetching projects:', err);
+      } catch (err: any) {
+        setError(err.message);
       } finally {
         setLoading(false);
       }
     };
-
     fetchProjects();
-  }, [selectedSection, selectedConstituency, selectedDepartment, selectedStatus, year]);
+  }, [location.search]);
 
   const handleProjectClick = (project: Project) => {
     setSelectedProject(project);
@@ -302,9 +147,9 @@ const ProjectsPage = () => {
     setIsModalOpen(false);
   };
 
-  const handleBackToConstituencies = () => {
-    setSelectedConstituency(null);
-    navigate('/projects/constituency', { replace: true });
+  const handleBackToSubCounties = () => {
+    setSelectedSubCounty('');
+    navigate('/projects/sub-county');
   };
 
   // Render status filters
@@ -331,8 +176,8 @@ const ProjectsPage = () => {
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
       {departments.map((dept) => (
         <button
-          key={dept.name}
-          onClick={() => navigate(`/projects/department/${encodeURIComponent(dept.name)}`)}
+          key={dept}
+          onClick={() => navigate(`/projects/department/${encodeURIComponent(dept)}`)}
           className="p-6 text-left rounded-lg shadow hover:shadow-lg transition-all duration-200 bg-white border border-gray-200 hover:border-green-500 group"
         >
           <div className="flex items-center justify-between mb-4">
@@ -351,25 +196,220 @@ const ProjectsPage = () => {
             </svg>
           </div>
           <h3 className="text-xl font-semibold text-gray-900 mb-2 group-hover:text-green-600 transition-colors duration-200">
-            {dept.name}
+            {dept}
           </h3>
-          {dept.subDepartments.length > 0 && (
-            <div className="mt-2 space-y-1">
-              {dept.subDepartments.map((sub) => (
-                <p key={sub} className="text-sm text-gray-500">{sub}</p>
-              ))}
-            </div>
-          )}
         </button>
       ))}
     </div>
   );
 
+  const renderSubCountyView = () => {
+    // Show subCounty overview with 5 projects per subCounty
+    if (!selectedSubCounty) {
+      return (
+        <>
+          <div className="mb-8">
+              <h2 className="text-2xl font-bold text-gray-900">Browse by Sub-County</h2>
+          </div>
+          <div className="space-y-8">
+            {subCountyData.map(subCounty => {
+              const subCountyProjects = projects.filter(project => project.subCounty === subCounty.name);
+              const displayProjects = subCountyProjects.slice(0, 5);
+              
+              return (
+                <div key={subCounty.name} className="bg-white rounded-lg shadow-sm overflow-hidden">
+                  <div className="px-6 py-4 border-b border-gray-200">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-lg font-semibold text-gray-900">{subCounty.name} Sub-County</h3>
+                      {subCountyProjects.length > 5 && (
+              <button
+                onClick={() => {
+                  setSelectedSubCounty(subCounty.name);
+                          }}
+                          className="text-sm text-green-600 hover:text-green-800 font-medium"
+                        >
+                          View All ({subCountyProjects.length} projects)
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                  {displayProjects.length > 0 ? (
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
+                          <tr>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ward</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Project Name</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Department</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                          {displayProjects.map((project) => (
+                            <tr key={project.id} className="hover:bg-gray-50 transition-colors duration-200">
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{project.ward}</td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <button
+                                  onClick={() => { setSelectedProject(project); setIsModalOpen(true); }}
+                                  className="text-sm font-medium text-green-600 hover:text-green-900 text-left"
+                                >
+                                  {project.title}
+                                </button>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{project.department}</td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                  ${project.status === 'completed' ? 'bg-green-100 text-green-800' :
+                                    project.status === 'ongoing' ? 'bg-blue-100 text-blue-800' :
+                                    project.status === 'stalled' ? 'bg-red-100 text-red-800' :
+                                    project.status === 'not_started' ? 'bg-gray-100 text-gray-800' :
+                                    'bg-purple-100 text-purple-800'}`}>
+                                  {project.status.charAt(0).toUpperCase() + project.status.slice(1)}
+                                </span>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    <div className="text-center py-8">
+                      <p className="text-gray-500">No projects found in this sub-county</p>
+                  </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </>
+      );
+    }
+
+    // Show all projects for selected subCounty with ward filter
+    const subCounty = subCountyData.find(c => c.name === selectedSubCounty);
+    if (!subCounty) return null;
+
+    const subCountyProjects = projects.filter(project => project.subCounty === subCounty.name);
+    const filteredProjects = selectedWard 
+      ? subCountyProjects.filter(project => project.ward === selectedWard)
+      : subCountyProjects;
+
+    return (
+      <div>
+        <div className="mb-8">
+          <button
+            onClick={() => setSelectedSubCounty('')}
+            className="inline-flex items-center text-sm text-gray-500 hover:text-green-600 transition-colors duration-200"
+          >
+            <svg className="w-5 h-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+            Back to Sub-Counties
+          </button>
+        </div>
+
+        <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-2xl font-bold text-gray-900">{subCounty.name} Sub-County</h2>
+            <div className="flex items-center gap-4">
+              <div className="relative">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Filter by Ward:</label>
+                <select
+                  value={selectedWard || ''}
+                  onChange={e => setSelectedWard(e.target.value || null)}
+                  className="appearance-none bg-white border border-gray-300 rounded-lg px-4 py-2 pr-8 focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                >
+                  <option value="">All Wards</option>
+                  {subCounty.wards.map(w => (
+                    <option key={w} value={w}>{w}</option>
+                  ))}
+                </select>
+                <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+                  <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
+              </div>
+              <div className="relative">
+                <select
+                  value={selectedSubCounty}
+                  onChange={e => {
+                    setSelectedSubCounty(e.target.value);
+                    setSelectedWard(null);
+                  }}
+                  className="appearance-none bg-white border border-gray-300 rounded-lg px-4 py-2 pr-8 focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                >
+                  {subCountyData.map(c => (
+                    <option key={c.name} value={c.name}>{c.name}</option>
+                  ))}
+                </select>
+                <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+                  <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {loading ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
+          </div>
+        ) : filteredProjects.length > 0 ? (
+          <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+                      <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
+                          <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ward</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Project Name</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Department</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                {filteredProjects.map((project) => (
+                  <tr key={project.id} className="hover:bg-gray-50 transition-colors duration-200">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{project.ward}</td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <button
+                        onClick={() => { setSelectedProject(project); setIsModalOpen(true); }}
+                        className="text-sm font-medium text-green-600 hover:text-green-900 text-left"
+                      >
+                        {project.title}
+                      </button>
+                              </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{project.department}</td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                  ${project.status === 'completed' ? 'bg-green-100 text-green-800' :
+                                    project.status === 'ongoing' ? 'bg-blue-100 text-blue-800' :
+                                    project.status === 'stalled' ? 'bg-red-100 text-red-800' :
+                                    project.status === 'not_started' ? 'bg-gray-100 text-gray-800' :
+                          'bg-purple-100 text-purple-800'}`}>
+                                  {project.status.charAt(0).toUpperCase() + project.status.slice(1)}
+                                </span>
+                              </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div className="text-center py-12 bg-white rounded-lg shadow">
+            <h4 className="text-lg font-medium text-gray-900 mb-2">No projects found</h4>
+            <p className="text-gray-500">No projects found in this sub-county.</p>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   const renderRecentProjects = () => (
     <div>
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-gray-900">Recent Projects</h2>
-        <StatusFilters />
+        <h2 className="text-2xl font-bold text-gray-900">Recently Uploaded Projects</h2>
       </div>
       {loading ? (
         <div className="flex items-center justify-center py-12">
@@ -381,7 +421,7 @@ const ProjectsPage = () => {
           <p className="text-gray-500">{error}</p>
         </div>
       ) : projects.length > 0 ? (
-        <ProjectGrid projects={projects} onProjectClick={handleProjectClick} />
+        <ProjectGrid projects={projects.slice(0, 6)} onProjectClick={handleProjectClick} />
       ) : (
         <div className="text-center py-12 bg-white rounded-lg shadow">
           <h4 className="text-lg font-medium text-gray-900 mb-2">No projects found</h4>
@@ -391,153 +431,110 @@ const ProjectsPage = () => {
     </div>
   );
 
-  const renderConstituencyView = () => {
-    if (!selectedConstituency) {
-      return (
-        <>
-          <div className="flex justify-between items-center mb-6">
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900">Browse by Constituency</h2>
-              {year && year !== 'all' && (
-                <p className="text-gray-600 mt-1">Financial Year: {year}</p>
-              )}
-            </div>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-            {constituencyData.map((constituency) => (
-              <button
-                key={constituency.name}
-                onClick={() => {
-                  setSelectedConstituency(constituency.name);
-                  // Update URL without full navigation
-                  navigate(`/projects/constituency/${encodeURIComponent(constituency.name)}`, { replace: true });
-                }}
-                className="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden group"
-              >
-                <div className="p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="bg-green-50 rounded-lg p-3 group-hover:bg-green-100 transition-colors duration-200">
-                      <svg className="w-8 h-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                      </svg>
-                    </div>
-                    <span className="text-sm text-gray-500">{constituency.wards.length} Wards</span>
-                  </div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2 group-hover:text-green-600">
-                    {constituency.name} Constituency
-                  </h3>
-                  <div className="mt-4">
-                    <div className="text-sm text-gray-600">
-                      Wards: {constituency.wards.join(', ')}
-                    </div>
-                  </div>
-                </div>
-                <div className="px-6 py-3 bg-gray-50 border-t border-gray-100">
-                  <div className="flex items-center text-sm text-green-600">
-                    <span>View Projects</span>
-                    <svg className="w-4 h-4 ml-2 transform group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                  </div>
-                </div>
-              </button>
-            ))}
-          </div>
-        </>
-      );
-    }
-
-    const constituency = constituencyData.find(c => c.name === selectedConstituency);
-    if (!constituency) return null;
-
+  const renderDepartmentView = () => {
+    // If no department selected, show a table for each department; if selected, show only that department's table
+    const departmentsToShow = selectedDepartment ? [selectedDepartment] : departments;
     return (
       <div>
         <div className="mb-8">
-          <button
-            onClick={handleBackToConstituencies}
-            className="inline-flex items-center text-sm text-gray-500 hover:text-green-600 transition-colors duration-200"
-          >
-            <svg className="w-5 h-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-            Back to Constituencies
-          </button>
+          {selectedDepartment && (
+            <button
+              onClick={() => {
+                navigate('/projects/department');
+                setSelectedDepartment(null);
+              }}
+              className="inline-flex items-center text-sm text-gray-500 hover:text-green-600 transition-colors duration-200"
+            >
+              <svg className="w-5 h-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+              Back to Departments
+            </button>
+          )}
         </div>
-
+        
+        {/* Department Dropdown */}
         <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">{constituency.name} Constituency</h2>
-          <div className="flex justify-between items-center mb-6">
-            <p className="text-gray-600">Viewing all projects across {constituency.wards.length} wards</p>
-            <StatusFilters />
+          <div className="flex items-center gap-4">
+            <label className="text-sm font-medium text-gray-700">Filter by Department:</label>
+            <div className="relative">
+              <select
+                value={selectedDepartment || ''}
+                onChange={e => setSelectedDepartment(e.target.value || null)}
+                className="appearance-none bg-white border border-gray-300 rounded-lg px-4 py-2 pr-8 focus:ring-2 focus:ring-green-500 focus:border-green-500"
+              >
+                <option value="">All Departments</option>
+                {departments.map(dept => (
+                  <option key={dept} value={dept}>{dept}</option>
+                ))}
+              </select>
+              <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+                <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+            </div>
+            {selectedDepartment && (
+              <button
+                onClick={() => setSelectedDepartment(null)}
+                className="text-sm text-green-600 hover:text-green-800 font-medium"
+              >
+                Clear Filter
+              </button>
+            )}
           </div>
         </div>
-
-        {loading ? (
-          <div className="flex items-center justify-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
-          </div>
-        ) : (
-          <div className="space-y-8">
-            {constituency.wards.map(ward => {
-              const wardProjects = projects.filter(project => project.ward === ward);
-              
-              return (
-                <div key={ward} className="bg-white rounded-lg shadow-sm overflow-hidden">
-                  <div className="px-6 py-4 border-b border-gray-200">
-                    <h3 className="text-lg font-semibold text-gray-900">{ward} Ward</h3>
-                  </div>
-                  
-                  {wardProjects.length > 0 ? (
-                    <div className="overflow-x-auto">
-                      <table className="min-w-full divide-y divide-gray-200">
-                        <thead className="bg-gray-50">
-                          <tr>
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                              Project Name
-                            </th>
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                              Status
-                            </th>
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                              Budget
-                            </th>
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                              Timeline
-                            </th>
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                              Progress
-                            </th>
-                            <th scope="col" className="relative px-6 py-3">
-                              <span className="sr-only">View</span>
-                            </th>
-                          </tr>
-                        </thead>
-                        <tbody className="bg-white divide-y divide-gray-200">
-                          {wardProjects.map((project) => (
-                            <tr 
-                              key={project.id}
-                              className="hover:bg-gray-50 transition-colors duration-200 cursor-pointer"
-                              onClick={() => handleProjectClick(project)}
+        
+        {departmentsToShow.map(dept => {
+          const deptProjects = projects.filter(project => project.department === dept);
+          const displayProjects = selectedDepartment ? deptProjects : deptProjects.slice(0, 5);
+          
+          return (
+            <div key={dept} className="bg-white rounded-lg shadow-sm overflow-hidden mb-8">
+              <div className="px-6 py-4 border-b border-gray-200">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold text-gray-900">{dept} Department</h3>
+                  {!selectedDepartment && deptProjects.length > 5 && (
+                    <button
+                      onClick={() => {
+                        setSelectedDepartment(dept);
+                        navigate(`/projects/department/${encodeURIComponent(dept)}`);
+                      }}
+                      className="text-sm text-green-600 hover:text-green-800 font-medium"
+                    >
+                      View All ({deptProjects.length} projects)
+                    </button>
+                  )}
+                </div>
+              </div>
+              {displayProjects.length > 0 ? (
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Project Name</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Department</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Constituency</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ward</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Timeline</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Progress</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {displayProjects.map((project) => (
+                        <tr key={project.id} className="hover:bg-gray-50 transition-colors duration-200">
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <button
+                              onClick={() => { setSelectedProject(project); setIsModalOpen(true); }}
+                              className="text-sm font-medium text-green-600 hover:text-green-900 text-left"
                             >
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="text-sm font-medium text-gray-900">{project.title}</div>
-                                <div className="text-sm text-gray-500">{project.description.substring(0, 60)}...</div>
+                              {project.title}
+                            </button>
                               </td>
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                                  ${project.status === 'completed' ? 'bg-green-100 text-green-800' :
-                                    project.status === 'ongoing' ? 'bg-blue-100 text-blue-800' :
-                                    project.status === 'stalled' ? 'bg-red-100 text-red-800' :
-                                    project.status === 'not_started' ? 'bg-gray-100 text-gray-800' :
-                                    'bg-purple-100 text-purple-800'}`}
-                                >
-                                  {project.status.charAt(0).toUpperCase() + project.status.slice(1)}
-                                </span>
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                KES {project.budgetedCost.toLocaleString()}
-                              </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{project.department}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{project.subCounty}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{project.ward}</td>
                               <td className="px-6 py-4 whitespace-nowrap">
                                 <div className="text-sm text-gray-900">{new Date(project.contractStartDate).toLocaleDateString()}</div>
                                 <div className="text-sm text-gray-500">to {new Date(project.contractEndDate).toLocaleDateString()}</div>
@@ -556,8 +553,15 @@ const ProjectsPage = () => {
                                 </div>
                                 <div className="text-xs text-gray-500 mt-1">{project.progress}%</div>
                               </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                <button className="text-green-600 hover:text-green-900">View Details</button>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                              ${project.status === 'completed' ? 'bg-green-100 text-green-800' :
+                                project.status === 'ongoing' ? 'bg-blue-100 text-blue-800' :
+                                project.status === 'stalled' ? 'bg-red-100 text-red-800' :
+                                project.status === 'not_started' ? 'bg-gray-100 text-gray-800' :
+                                'bg-purple-100 text-purple-800'}`}>
+                              {project.status.charAt(0).toUpperCase() + project.status.slice(1)}
+                            </span>
                               </td>
                             </tr>
                           ))}
@@ -566,96 +570,63 @@ const ProjectsPage = () => {
                     </div>
                   ) : (
                     <div className="text-center py-8">
-                      <p className="text-gray-500">No projects found in this ward</p>
+                  <p className="text-gray-500">No projects found in this department</p>
                     </div>
                   )}
                 </div>
               );
             })}
-          </div>
-        )}
       </div>
     );
   };
 
-  const renderDepartmentView = () => {
-    const department = departments.find(d => d.name === selectedDepartment);
-    if (!department) return null;
+    // Update the header display
+  const renderHeader = () => {
+    const searchParams = new URLSearchParams(location.search);
+    const yearFromQuery = searchParams.get('year');
+    const statusFromQuery = searchParams.get('status');
 
     return (
+      <div className="bg-white shadow-sm border-b border-gray-200">
+        <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between">
       <div>
-        <div className="mb-8">
-          <button
-            onClick={() => {
-              navigate('/projects/department');
-              setSelectedDepartment(null);
-            }}
-            className="inline-flex items-center text-sm text-gray-500 hover:text-green-600 transition-colors duration-200"
-          >
-            <svg className="w-5 h-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-            Back to Departments
-          </button>
-        </div>
-
-        <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">{department.name}</h2>
-            {year && year !== 'all' && (
-              <p className="text-gray-600">Financial Year: {year}</p>
+              <h1 className="text-3xl font-bold text-gray-900">
+                Projects
+              </h1>
+              {yearFromQuery && yearFromQuery !== 'all' && (
+                <p className="mt-2 text-lg text-green-600 font-medium">
+                  Financial Year: {yearFromQuery}
+                </p>
+              )}
+              {statusFromQuery && statusFromQuery !== 'all' && (
+                <p className="mt-2 text-lg text-blue-600 font-medium">
+                  Status: {statusFromQuery.charAt(0).toUpperCase() + statusFromQuery.slice(1).replace('_', ' ')}
+                </p>
             )}
           </div>
-          {department.subDepartments.length > 0 && (
-            <div className="flex flex-wrap gap-2 mt-4">
-              {department.subDepartments.map((sub) => (
-                <span key={sub} className="px-3 py-1 bg-green-50 text-green-700 rounded-full text-sm">
-                  {sub}
-                </span>
-              ))}
+            <div className="flex items-center space-x-4">
+              <button
+                onClick={() => navigate('/projects')}
+                className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700"
+              >
+                View All Projects
+              </button>
             </div>
-          )}
-        </div>
-
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          <div className="flex justify-between items-center mb-6">
-            <h3 className="text-xl font-semibold text-gray-900">Department Projects</h3>
-            <StatusFilters />
           </div>
-          
-          {loading ? (
-            <div className="flex items-center justify-center py-12">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
-            </div>
-          ) : projects.length > 0 ? (
-            <ProjectGrid projects={projects} onProjectClick={handleProjectClick} />
-          ) : (
-            <div className="text-center py-12">
-              <h4 className="text-lg font-medium text-gray-900 mb-2">No projects found</h4>
-              <p className="text-gray-500">There are currently no projects in this department.</p>
-            </div>
-          )}
         </div>
       </div>
     );
   };
 
-  // Update the header display
-  const renderHeader = () => {
-    if (year && year !== 'all') {
-      return (
-        <div className="flex justify-between items-center mb-6">
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900">Financial Year {year}</h2>
-            <p className="text-gray-600 mt-1">All Projects</p>
-          </div>
-          <StatusFilters />
-        </div>
-      );
-    }
-
-    return null;
-  };
+  // Filtering logic
+  const filteredProjects = projects.filter(p => {
+    if (selectedSubCounty && p.subCounty !== selectedSubCounty) return false;
+    if (selectedWard && p.ward !== selectedWard) return false;
+    if (selectedDepartment && p.department !== selectedDepartment) return false;
+    if (selectedStatus && selectedStatus !== 'all' && p.status !== selectedStatus) return false;
+    return true;
+  });
 
   // If no section is selected, show the sections overview
   if (!selectedSection) {
@@ -672,18 +643,22 @@ const ProjectsPage = () => {
       <Navbar />
       
       {/* Section Tabs - Only show when no specific year is selected */}
-      {(!year || year === 'all') && (
+      {(() => {
+        const searchParams = new URLSearchParams(location.search);
+        const yearFromQuery = searchParams.get('year');
+        return !yearFromQuery || yearFromQuery === 'all';
+      })() && (
         <div className="mt-24">
           <div className="max-w-7xl mx-auto">
             <div className="border-b border-gray-200">
               <nav className="-mb-px flex space-x-8 px-4 sm:px-6 lg:px-8" aria-label="Tabs">
-                {['recent', 'constituency', 'department'].map((section) => (
+                {['recent', 'subCounty', 'department'].map((section) => (
                   <button
                     key={section}
                     onClick={() => {
                       navigate(`/projects/${section}`, { replace: true });
-                      setSelectedSection(section as 'recent' | 'constituency' | 'department');
-                      setSelectedConstituency(null);
+                      setSelectedSection(section as 'recent' | 'subCounty' | 'department');
+                      setSelectedSubCounty('Kangema');
                       setSelectedProject(null);
                       setSelectedStatus('all');
                     }}
@@ -703,14 +678,27 @@ const ProjectsPage = () => {
         </div>
       )}
 
-      <div className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 ${year && year !== 'all' ? 'mt-24' : ''} py-6`}>
         {renderHeader()}
-        {year && year !== 'all' ? (
-          <ProjectGrid projects={projects} onProjectClick={handleProjectClick} />
+      
+      <div className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6`}>
+        {/* Status Filters - Show when a year is selected or when status filter is applied */}
+        {(() => {
+          const searchParams = new URLSearchParams(location.search);
+          const yearFromQuery = searchParams.get('year');
+          const statusFromQuery = searchParams.get('status');
+          return (yearFromQuery && yearFromQuery !== 'all') || (statusFromQuery && statusFromQuery !== 'all');
+        })() && <StatusFilters />}
+        
+        {(() => {
+          const searchParams = new URLSearchParams(location.search);
+          const yearFromQuery = searchParams.get('year');
+          return yearFromQuery && yearFromQuery !== 'all';
+        })() ? (
+          <ProjectGrid projects={filteredProjects} onProjectClick={handleProjectClick} />
         ) : (
           <>
             {selectedSection === 'recent' && renderRecentProjects()}
-            {selectedSection === 'constituency' && renderConstituencyView()}
+            {selectedSection === 'subCounty' && renderSubCountyView()}
             {selectedSection === 'department' && renderDepartmentView()}
           </>
         )}

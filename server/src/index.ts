@@ -18,10 +18,19 @@ app.use(cors());
 app.use(express.json());
 
 // Routes
-app.use('/auth', authRouter);
+app.use('/api/auth', authRouter);
 app.use('/api/projects', projectRouter);
 app.use('/api/comments', commentRouter);
 app.use('/api/users', userRouter);
+
+// Health check endpoint
+app.get('/api/health', (_req, res) => {
+  res.json({ 
+    status: 'OK', 
+    message: 'Murang\'a Project Tracker API is running',
+    timestamp: new Date().toISOString()
+  });
+});
 
 // Test endpoint
 app.get('/test', (_req, res) => {

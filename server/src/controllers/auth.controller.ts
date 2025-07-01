@@ -123,6 +123,7 @@ export const loginUser = async (
         name: user.name,
         email: user.email,
         role: user.role,
+        isApproved: user.isApproved,
         createdAt: user.createdAt,
       },
       token,

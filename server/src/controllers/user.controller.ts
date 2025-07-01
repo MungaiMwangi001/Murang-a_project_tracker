@@ -17,6 +17,7 @@ export const getAllUsers = async (
         name: true,
         email: true,
         role: true,
+        isApproved: true,
         createdAt: true,
         updatedAt: true,
         _count: {

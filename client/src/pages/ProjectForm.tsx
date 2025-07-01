@@ -26,6 +26,8 @@ interface ProjectFormData {
   ward: string;
   financialYear: string;
   images: File[];
+  progress?: number;
+  amountPaidToDate?: number;
 }
 
 const ProjectForm = () => {
@@ -56,7 +58,8 @@ const ProjectForm = () => {
     constituency: '',
     ward: '',
     financialYear: '',
-    images: []
+    images: [],
+    progress: 0
   });
 
   useEffect(() => {
@@ -101,7 +104,8 @@ const ProjectForm = () => {
             ...mockProject,
             budgetedCost: mockProject.budgetedCost.toString(),
             contractCost: mockProject.contractCost.toString(),
-            images: []
+            images: [],
+            progress: mockProject.progress
           });
           
           // Set image previews for existing images
@@ -141,15 +145,33 @@ const ProjectForm = () => {
     e.preventDefault();
     try {
       setLoading(true);
-      // TODO: Replace with actual API call
-      console.log('Form data:', formData);
-      
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
+      // Prepare the data (convert numbers, etc.)
+      const payload = {
+        ...formData,
+        budgetedCost: Number(formData.budgetedCost),
+        contractCost: Number(formData.contractCost),
+        progress: Number(formData.progress) || 0,
+        amountPaidToDate: Number(formData.amountPaidToDate) || 0,
+        // Add any other necessary conversions
+      };
+      // Send to backend
+      const token = localStorage.getItem('token');
+      const res = await fetch('/api/projects', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || 'Failed to add project');
+      }
       navigate('/staff');
     } catch (error) {
       console.error('Error submitting project:', error);
+      // Optionally, show an error message to the user
     } finally {
       setLoading(false);
     }

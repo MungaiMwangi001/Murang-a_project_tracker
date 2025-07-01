@@ -6,6 +6,7 @@ import authRouter from './routes/auth.routes';
 import projectRouter from './routes/project.routes';
 import commentRouter from './routes/comment.routes';
 import userRouter from './routes/user.routes';
+import { Request, Response, NextFunction } from 'express';
 
 dotenv.config();
 
@@ -24,11 +25,17 @@ app.use('/api/users', userRouter);
 
 // Test endpoint
 app.get('/test', (_req, res) => {
-  res.json({ message: 'Test endpoint is working!' });
+  res.json({ message: 'Backend is working!' });
 });
 
 app.get('/', (_req, res) => {
   res.send('Welcome to the Project Tracker API!');
+});
+
+// Add this at the end of the file, after all routes
+app.use((err: any, req: Request, res: Response, next: NextFunction) => {
+  console.error('Global error handler:', err);
+  res.status(500).json({ error: 'Internal Server Error', message: err.message });
 });
 
 app.listen(PORT, () => {

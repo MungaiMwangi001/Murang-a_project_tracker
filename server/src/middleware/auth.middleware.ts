@@ -12,6 +12,7 @@ declare global {
         id: string;
         email: string;
         role: string;
+        isApproved: boolean;
       };
     }
   }
@@ -59,7 +60,13 @@ export const verifyToken = async (
       return;
     }
 
-    req.user = decoded;
+    // Attach all relevant user info, including isApproved, to req.user
+    req.user = {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+      isApproved: user.isApproved,
+    };
     next();
   } catch (error) {
     console.error('Token verification error:', error);

@@ -1,59 +1,32 @@
-import { useState, useEffect } from 'react';
-import { Routes, Route, Link, useNavigate } from 'react-router-dom';
+import { useState, useEffect, useContext } from 'react';
+import { Routes, Route, useNavigate } from 'react-router-dom';
 import { Project } from '../types/project';
 import Navbar from '../components/Navbar';
 import ProjectForm from './ProjectForm';
+import { UserContext } from '../context/UserContext';
 
 const StaffDashboardHome = () => {
   const [userProjects, setUserProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
-
-  // Mock staff ID - In real app, this would come from authentication
-  const staffId = 'staff123';
+  const { user, logout } = useContext(UserContext);
 
   useEffect(() => {
     // Fetch staff's projects
     const fetchStaffProjects = async () => {
       try {
         setLoading(true);
-        // TODO: Replace with actual API call
-        // Mock data for now
-        const mockProjects = [
-          {
-            id: '1',
-            title: 'Water Supply Project - Phase 1',
-            description: 'Installation of water supply infrastructure in rural areas',
-            status: 'ongoing',
-            budgetedCost: 5000000,
-            sourceOfFunds: 'County Development Fund',
-            progress: 65,
-            department: 'Water and Sanitation',
-            directorate: 'Water Resources',
-            contractName: 'Rural Water Supply Initiative 2024',
-            lpoNumber: 'LPO-2024-001',
-            contractNumber: 'CNT-2024-001',
-            contractor: 'Maji Solutions Ltd',
-            contractPeriod: '12 months',
-            contractStartDate: '2024-01-15',
-            contractEndDate: '2025-01-14',
-            contractCost: 4800000,
-            implementationStatus: 'On Schedule',
-            amountPaidToDate: 3120000,
-            recommendations: 'Project progressing well, maintain current pace',
-            pmc: 'Water Development Committee',
-            lastUpdated: '2024-03-10',
-            constituency: 'Kiharu',
-            ward: 'Township',
-            financialYear: '2024/2025',
-            images: [
-              '/images/projects/water-supply-1.jpg',
-              '/images/projects/water-supply-2.jpg',
-            ],
-            comments: []
-          }
-        ];
-        setUserProjects(mockProjects);
+        const token = localStorage.getItem('token');
+        const res = await fetch('/api/projects/staff/projects', {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        if (!res.ok) {
+          throw new Error('Failed to fetch projects');
+        }
+        const data = await res.json();
+        setUserProjects(data.projects || data); // Adjust based on backend response
       } catch (error) {
         console.error('Error fetching projects:', error);
       } finally {
@@ -64,6 +37,18 @@ const StaffDashboardHome = () => {
     fetchStaffProjects();
   }, []);
 
+  if (user && user.role === 'STAFF' && !user.isApproved) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Navbar />
+        <div className="max-w-2xl mx-auto px-4 py-24 text-center">
+          <h2 className="text-2xl font-bold text-gray-800 mb-4">Awaiting Admin Approval</h2>
+          <p className="text-gray-600">Your staff account is pending approval by an administrator. You will be able to create and manage projects once approved.</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
@@ -73,15 +58,23 @@ const StaffDashboardHome = () => {
         <div className="mb-8">
           <div className="flex justify-between items-center">
             <h1 className="text-3xl font-bold text-gray-900">Staff Dashboard</h1>
-            <button
-              onClick={() => navigate('/staff/projects/new')}
-              className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-            >
-              <svg className="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
-              </svg>
-              Add New Project
-            </button>
+            <div className="flex space-x-4">
+              <button
+                onClick={() => navigate('/staff/projects/new')}
+                className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+              >
+                <svg className="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
+                </svg>
+                Add New Project
+              </button>
+              <button
+                onClick={logout}
+                className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+              >
+                Logout
+              </button>
+            </div>
           </div>
           
           {/* Quick Stats */}

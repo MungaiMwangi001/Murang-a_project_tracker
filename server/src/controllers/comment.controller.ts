@@ -10,7 +10,7 @@ export const createComment = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const { projectId, content } = req.body;
+    const { projectId, content, parentId } = req.body;
 
     if (!projectId || !content) {
       res.status(400).json({
@@ -37,7 +37,10 @@ export const createComment = async (
       data: {
         content,
         userId: req.user!.id,
-        projectId
+        userName: (req.user as any).name || req.user!.email,
+        timestamp: new Date(),
+        projectId,
+        parentId: parentId || null
       },
       include: {
         user: {
@@ -52,7 +55,8 @@ export const createComment = async (
             id: true,
             title: true
           }
-        }
+        },
+        replies: true
       }
     });
 

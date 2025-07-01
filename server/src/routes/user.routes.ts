@@ -5,7 +5,8 @@ import {
   createUser,
   updateUser,
   deleteUser,
-  getStaffMembers
+  getStaffMembers,
+  approveStaff
 } from '../controllers/user.controller';
 import { verifyToken, requireAdmin } from '../middleware/auth.middleware';
 
@@ -21,5 +22,6 @@ router.get('/:id', getUserById);
 router.post('/', createUser);
 router.put('/:id', updateUser);
 router.delete('/:id', deleteUser);
+router.put('/:id/approve', approveStaff);
 
 export default router; 

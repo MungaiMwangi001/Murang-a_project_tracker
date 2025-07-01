@@ -10,12 +10,21 @@ export const createProject = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const { title, description, status, priority, dueDate, staffId } = req.body;
+    const { title, description, status, budgetedCost, sourceOfFunds, progress, department, directorate, contractName, lpoNumber, contractNumber, contractor, contractPeriod, contractStartDate, contractEndDate, contractCost, implementationStatus, amountPaidToDate, recommendations, pmc, lastUpdated, constituency, ward, images, financialYear, latitude, longitude, staffId } = req.body;
 
     if (!title) {
       res.status(400).json({
         error: 'Missing required fields',
         message: 'Title is required'
+      });
+      return;
+    }
+
+    // Only allow approved staff or admin to create projects
+    if (req.user!.role === 'STAFF' && !(req.user as any).isApproved) {
+      res.status(403).json({
+        error: 'Not approved',
+        message: 'Your account is awaiting admin approval. You cannot create projects yet.'
       });
       return;
     }
@@ -39,10 +48,32 @@ export const createProject = async (
       data: {
         title,
         description,
-        status: status || 'PLANNING',
-        priority: priority || 'MEDIUM',
-        dueDate: dueDate ? new Date(dueDate) : null,
-        staffId: staffId || req.user!.id, // Assign to current user if no staffId provided
+        status,
+        budgetedCost,
+        sourceOfFunds,
+        progress,
+        department,
+        directorate,
+        contractName,
+        lpoNumber,
+        contractNumber,
+        contractor,
+        contractPeriod,
+        contractStartDate: contractStartDate ? new Date(contractStartDate) : new Date(),
+        contractEndDate: contractEndDate ? new Date(contractEndDate) : new Date(),
+        contractCost,
+        implementationStatus,
+        amountPaidToDate,
+        recommendations,
+        pmc,
+        lastUpdated: lastUpdated ? new Date(lastUpdated) : new Date(),
+        constituency,
+        ward,
+        images,
+        financialYear,
+        latitude,
+        longitude,
+        staffId: staffId || req.user!.id,
         createdById: req.user!.id,
         lastEditedById: req.user!.id,
       },
@@ -222,7 +253,7 @@ export const updateProject = async (
 ): Promise<void> => {
   try {
     const { id } = req.params;
-    const { title, description, status, priority, dueDate, staffId } = req.body;
+    const { title, description, status, budgetedCost, sourceOfFunds, progress, department, directorate, contractName, lpoNumber, contractNumber, contractor, contractPeriod, contractStartDate, contractEndDate, contractCost, implementationStatus, amountPaidToDate, recommendations, pmc, lastUpdated, constituency, ward, images, financialYear, latitude, longitude, staffId } = req.body;
 
     const project = await prisma.project.findUnique({
       where: { id },
@@ -269,8 +300,30 @@ export const updateProject = async (
         title,
         description,
         status,
-        priority,
-        dueDate: dueDate ? new Date(dueDate) : null,
+        budgetedCost,
+        sourceOfFunds,
+        progress,
+        department,
+        directorate,
+        contractName,
+        lpoNumber,
+        contractNumber,
+        contractor,
+        contractPeriod,
+        contractStartDate: contractStartDate ? new Date(contractStartDate) : new Date(),
+        contractEndDate: contractEndDate ? new Date(contractEndDate) : new Date(),
+        contractCost,
+        implementationStatus,
+        amountPaidToDate,
+        recommendations,
+        pmc,
+        lastUpdated: lastUpdated ? new Date(lastUpdated) : new Date(),
+        constituency,
+        ward,
+        images,
+        financialYear,
+        latitude,
+        longitude,
         staffId,
         lastEditedById: req.user!.id,
       },

@@ -326,4 +326,36 @@ export const getStaffMembers = async (
     console.error('Get staff members error:', error);
     next(error);
   }
+};
+
+// Admin: Approve a staff user
+export const approveStaff = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const user = await prisma.user.findUnique({ where: { id } });
+    if (!user) {
+      res.status(404).json({ error: 'User not found', message: 'No user with this ID' });
+      return;
+    }
+    if (user.role !== 'STAFF') {
+      res.status(400).json({ error: 'Not a staff user', message: 'Only staff users can be approved' });
+      return;
+    }
+    if (user.isApproved) {
+      res.status(200).json({ message: 'Staff user is already approved', user });
+      return;
+    }
+    const updatedUser = await prisma.user.update({
+      where: { id },
+      data: { isApproved: true },
+    });
+    res.status(200).json({ message: 'Staff user approved successfully', user: updatedUser });
+  } catch (error) {
+    console.error('Approve staff error:', error);
+    next(error);
+  }
 }; 

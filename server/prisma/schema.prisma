@@ -13,6 +13,7 @@ model User {
   email     String   @unique
   password  String
   role      Role     @default(PUBLIC)
+  isApproved Boolean @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -26,39 +27,67 @@ model User {
 }
 
 model Project {
-  id          String        @id @default(cuid())
-  title       String
-  description String?
-  status      ProjectStatus @default(PLANNING)
-  priority    Priority      @default(MEDIUM)
-  dueDate     DateTime?
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+  id                String     @id @default(cuid())
+  title             String
+  description       String?
+  status            String
+  budgetedCost      Float
+  sourceOfFunds     String
+  progress          Int
+  department        String
+  directorate       String
+  contractName      String
+  lpoNumber         String
+  contractNumber    String
+  contractor        String
+  contractPeriod    String
+  contractStartDate DateTime
+  contractEndDate   DateTime
+  contractCost      Float
+  implementationStatus String
+  amountPaidToDate  Float
+  recommendations   String
+  pmc               String
+  lastUpdated       DateTime
+  constituency      String
+  ward              String
+  images            String[]
+  financialYear     String
+  latitude          Float?
+  longitude         Float?
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
 
   // Relations
-  staffId     String
-  staff       User      @relation("StaffProjects", fields: [staffId], references: [id], onDelete: Cascade)
-  comments    Comment[]
+  staffId           String
+  staff             User      @relation("StaffProjects", fields: [staffId], references: [id], onDelete: Cascade)
+  comments          Comment[]
 
-  createdById String
-  createdBy   User      @relation("CreatedProjects", fields: [createdById], references: [id], onDelete: SetNull)
-  lastEditedById String
-  lastEditedBy   User   @relation("EditedProjects", fields: [lastEditedById], references: [id], onDelete: SetNull)
+  createdById       String
+  createdBy         User      @relation("CreatedProjects", fields: [createdById], references: [id], onDelete: SetNull)
+  lastEditedById    String
+  lastEditedBy      User      @relation("EditedProjects", fields: [lastEditedById], references: [id], onDelete: SetNull)
 
   @@map("projects")
 }
 
 model Comment {
   id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
   content   String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  // Relations
-  userId    String
-  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  projectId String
-  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  // Self-relation for replies
+  parentId  String?  
+  parent    Comment? @relation("CommentReplies", fields: [parentId], references: [id])
+  replies   Comment[] @relation("CommentReplies")
+
+  userName  String
+  timestamp DateTime @default(now())
 
   @@map("comments")
 }

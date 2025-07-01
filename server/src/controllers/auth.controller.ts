@@ -13,7 +13,7 @@ export const registerUser = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const { name, email, password } = req.body as RegisterData;
+    const { name, email, password, role } = req.body as RegisterData & { role?: string };
 
     if (!name || !email || !password) {
       res.status(400).json({
@@ -32,7 +32,6 @@ export const registerUser = async (
     }
 
     const existingUser = await prisma.user.findUnique({ where: { email } });
-
     if (existingUser) {
       res.status(409).json({
         error: 'User already exists',
@@ -41,14 +40,22 @@ export const registerUser = async (
       return;
     }
 
-    const hashedPassword = await hashPassword(password);
+    // Only allow STAFF registration, not ADMIN
+    let userRole = 'PUBLIC';
+    let isApproved = false;
+    if (role === 'STAFF') {
+      userRole = 'STAFF';
+      isApproved = false; // Must be approved by admin
+    }
 
+    const hashedPassword = await hashPassword(password);
     const user = await prisma.user.create({
       data: {
         name,
         email,
         password: hashedPassword,
-        role: 'PUBLIC' as any,
+        role: userRole as any,
+        isApproved,
       },
     });
 
@@ -59,12 +66,13 @@ export const registerUser = async (
     });
 
     res.status(201).json({
-      message: 'User registered successfully',
+      message: userRole === 'STAFF' ? 'Staff registered successfully. Awaiting admin approval.' : 'User registered successfully',
       user: {
         id: user.id,
         name: user.name,
         email: user.email,
         role: user.role,
+        isApproved: user.isApproved,
         createdAt: user.createdAt,
       },
       token,

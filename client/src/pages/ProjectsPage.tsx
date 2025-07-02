@@ -61,6 +61,8 @@ const ProjectsPage = () => {
     const searchParams = new URLSearchParams(location.search);
     const yearFromQuery = searchParams.get('year');
     const statusFromQuery = searchParams.get('status');
+    const subcountyFromQuery = searchParams.get('subcounty');
+    const wardFromQuery = searchParams.get('ward');
     
     console.log('ProjectsPage - Current path:', path);
     console.log('ProjectsPage - Year param:', year);
@@ -98,6 +100,12 @@ const ProjectsPage = () => {
       }
     } else {
       setSelectedSection('recent'); // Default to recent if no section specified
+    }
+
+    if (subcountyFromQuery) {
+      setSelectedSection('subCounty');
+      setSelectedSubCounty(subcountyFromQuery);
+      setSelectedWard(wardFromQuery || null);
     }
   }, [location, subCountyName, year]);
 
@@ -145,11 +153,20 @@ const ProjectsPage = () => {
   const handleBackToProjects = () => {
     setSelectedProject(null);
     setIsModalOpen(false);
+    setSelectedSubCounty('');
+    setSelectedWard(null);
+    navigate('/projects');
   };
 
-  const handleBackToSubCounties = () => {
-    setSelectedSubCounty('');
-    navigate('/projects/sub-county');
+  const handleSubCountyChange = (subCounty: string) => {
+    setSelectedSubCounty(subCounty);
+    setSelectedWard(null);
+    navigate(`/projects?subcounty=${encodeURIComponent(subCounty)}`);
+  };
+
+  const handleWardChange = (ward: string) => {
+    setSelectedWard(ward);
+    navigate(`/projects?subcounty=${encodeURIComponent(selectedSubCounty)}&ward=${encodeURIComponent(ward)}`);
   };
 
   // Render status filters
@@ -296,18 +313,6 @@ const ProjectsPage = () => {
 
     return (
       <div>
-        <div className="mb-8">
-          <button
-            onClick={() => setSelectedSubCounty('')}
-            className="inline-flex items-center text-sm text-gray-500 hover:text-green-600 transition-colors duration-200"
-          >
-            <svg className="w-5 h-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-            Back to Sub-Counties
-          </button>
-        </div>
-
         <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-2xl font-bold text-gray-900">{subCounty.name} Sub-County</h2>
@@ -316,7 +321,7 @@ const ProjectsPage = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-1">Filter by Ward:</label>
                 <select
                   value={selectedWard || ''}
-                  onChange={e => setSelectedWard(e.target.value || null)}
+                  onChange={e => handleWardChange(e.target.value || '')}
                   className="appearance-none bg-white border border-gray-300 rounded-lg px-4 py-2 pr-8 focus:ring-2 focus:ring-green-500 focus:border-green-500"
                 >
                   <option value="">All Wards</option>
@@ -333,10 +338,7 @@ const ProjectsPage = () => {
               <div className="relative">
                 <select
                   value={selectedSubCounty}
-                  onChange={e => {
-                    setSelectedSubCounty(e.target.value);
-                    setSelectedWard(null);
-                  }}
+                  onChange={e => handleSubCountyChange(e.target.value)}
                   className="appearance-none bg-white border border-gray-300 rounded-lg px-4 py-2 pr-8 focus:ring-2 focus:ring-green-500 focus:border-green-500"
                 >
                   {subCountyData.map(c => (

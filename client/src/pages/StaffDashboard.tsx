@@ -1,5 +1,5 @@
 import { useState, useEffect, useContext } from 'react';
-import { Routes, Route, useNavigate } from 'react-router-dom';
+import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { Project } from '../types/project';
 import Navbar from '../components/Navbar';
 import ProjectForm from './ProjectForm';
@@ -8,38 +8,49 @@ import { BellIcon, PlusCircleIcon, ClockIcon } from '@heroicons/react/24/outline
 import * as XLSX from 'xlsx';
 // @ts-ignore
 import { saveAs } from 'file-saver';
+import { departments } from '../types/projects';
 
 const StaffDashboardHome = () => {
   const [userProjects, setUserProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, logout } = useContext(UserContext);
+  const [selectedDepartment, setSelectedDepartment] = useState<string>('');
+
+  const fetchStaffProjects = async () => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem('token');
+      const res = await fetch('/api/projects/staff/projects', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (!res.ok) {
+        throw new Error('Failed to fetch projects');
+      }
+      const data = await res.json();
+      setUserProjects(data.projects || data); // Adjust based on backend response
+    } catch (error) {
+      console.error('Error fetching projects:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    // Fetch staff's projects
-    const fetchStaffProjects = async () => {
-      try {
-        setLoading(true);
-        const token = localStorage.getItem('token');
-        const res = await fetch('/api/projects/staff/projects', {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        if (!res.ok) {
-          throw new Error('Failed to fetch projects');
-        }
-        const data = await res.json();
-        setUserProjects(data.projects || data); // Adjust based on backend response
-      } catch (error) {
-        console.error('Error fetching projects:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchStaffProjects();
   }, []);
+
+  // Refresh projects if navigated with refresh flag
+  useEffect(() => {
+    if (location.state?.refresh) {
+      fetchStaffProjects();
+      // Clear the refresh flag so it doesn't refetch on every render
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [location.state, location.pathname, navigate]);
 
   // Delete project (staff)
   const handleDeleteProject = async (id: string) => {
@@ -61,7 +72,7 @@ const StaffDashboardHome = () => {
     return (
       <div className="min-h-screen bg-gray-50">
         <Navbar />
-        <div className="max-w-2xl mx-auto px-4 py-24 text-center">
+        <div className="w-full px-0 py-24 text-center">
           <h2 className="text-2xl font-bold text-gray-800 mb-4">Awaiting Admin Approval</h2>
           <p className="text-gray-600">Your staff account is pending approval by an administrator. You will be able to create and manage projects once approved.</p>
         </div>
@@ -72,7 +83,7 @@ const StaffDashboardHome = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-white">
       <Navbar />
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 mt-24">
+      <div className="w-full px-0 py-4 mt-24">
         {/* Dashboard Header */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8 gap-4">
           <div>
@@ -168,8 +179,8 @@ const StaffDashboardHome = () => {
               <div className="flex justify-center items-center h-32">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500"></div>
               </div>
-            ) : userProjects.length > 0 ? (
-              userProjects.map((project) => (
+            ) : userProjects.filter(p => !selectedDepartment || p.department === selectedDepartment).length > 0 ? (
+              userProjects.filter(p => !selectedDepartment || p.department === selectedDepartment).map((project) => (
                 <li key={project.id}>
                   <div className="block hover:bg-gray-50">
                     <div className="px-4 py-4 sm:px-6">

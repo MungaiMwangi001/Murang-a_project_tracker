@@ -35,14 +35,39 @@ export interface Project {
 
 export const constituencies: Constituency[] = [
   {
+    id: 'kangema',
+    name: 'Kangema',
+    wards: ['Kanyenya-Ini', 'Muguru', 'Rwathia']
+  },
+  {
+    id: 'mathioya',
+    name: 'Mathioya',
+    wards: ['Gitugi', 'Kiru', 'Kamacharia']
+  },
+  {
     id: 'kiharu',
     name: 'Kiharu',
-    wards: ['Wangu', 'Mugoiri', 'Mbiri', 'Township', 'Gaturi']
+    wards: ['Wangu', 'Mugoiri', 'Mbiri', 'Township', 'Murarandia', 'Gaturi']
+  },
+  {
+    id: 'kigumo',
+    name: 'Kigumo',
+    wards: ['Kahumbu', 'Muthithi', 'Kigumo', 'Kangari', 'Kinyona']
+  },
+  {
+    id: 'maragwa',
+    name: 'Maragwa',
+    wards: ['Kimorori/Wempa', 'Makuyu', 'Kambiti', 'Kamahuhu', 'Ichagaki', 'Nginda']
   },
   {
     id: 'kandara',
     name: 'Kandara',
-    wards: ['Ng\'araria', 'Muruka', 'Kagundu-ini', 'Gathugu', 'Ruchu']
+    wards: ["Ng'araria", 'Muruka', 'Kagundu-Ini', 'Gaichanjiru', 'Ithiru', 'Ruchu']
+  },
+  {
+    id: 'gatanga',
+    name: 'Gatanga',
+    wards: ['Ithanga', 'Kakuzi/Mitubiri', 'Mugumo-Ini', 'Kihumbu-Ini', 'Gatanga', 'Kariara']
   }
 ];
 

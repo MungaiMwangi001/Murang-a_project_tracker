@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Project } from '../types/project';
 import Navbar from '../components/Navbar';
+import { constituencies, ProjectStatus, departments } from '../types/projects';
 
 interface ProjectFormData {
   title: string;
@@ -29,6 +30,14 @@ interface ProjectFormData {
   progress?: number;
   amountPaidToDate?: number;
 }
+
+const statusOptions: { value: string; label: string }[] = [
+  { value: 'not_started', label: 'Not Started' },
+  { value: 'ongoing', label: 'Ongoing' },
+  { value: 'completed', label: 'Completed' },
+  { value: 'stalled', label: 'Stalled' },
+  { value: 'under_procurement', label: 'Under Procurement' },
+];
 
 const ProjectForm = () => {
   const { id } = useParams();
@@ -170,7 +179,7 @@ const ProjectForm = () => {
         const errorData = await res.json();
         throw new Error(errorData.message || 'Failed to add project');
       }
-      navigate('/staff');
+      navigate('/staff', { state: { refresh: true } });
     } catch (error) {
       console.error('Error submitting project:', error);
       // Optionally, show an error message to the user
@@ -178,6 +187,10 @@ const ProjectForm = () => {
       setLoading(false);
     }
   };
+
+  // Helper to get wards for selected constituency
+  const selectedConstituency = constituencies.find(c => c.name === formData.constituency);
+  const wardOptions = selectedConstituency ? selectedConstituency.wards : [];
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -244,11 +257,9 @@ const ProjectForm = () => {
                         onChange={handleInputChange}
                         className="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm"
                       >
-                        <option value="not_started">Not Started</option>
-                        <option value="ongoing">Ongoing</option>
-                        <option value="completed">Completed</option>
-                        <option value="stalled">Stalled</option>
-                        <option value="under_procurement">Under Procurement</option>
+                        {statusOptions.map(opt => (
+                          <option key={opt.value} value={opt.value}>{opt.label}</option>
+                        ))}
                       </select>
                     </div>
 
@@ -287,13 +298,9 @@ const ProjectForm = () => {
                         className="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm"
                       >
                         <option value="">Select Constituency</option>
-                        <option value="Kangema">Kangema</option>
-                        <option value="Mathioya">Mathioya</option>
-                        <option value="Kiharu">Kiharu</option>
-                        <option value="Kigumo">Kigumo</option>
-                        <option value="Maragwa">Maragwa</option>
-                        <option value="Kandara">Kandara</option>
-                        <option value="Gatanga">Gatanga</option>
+                        {constituencies.map(c => (
+                          <option key={c.name} value={c.name}>{c.name}</option>
+                        ))}
                       </select>
                     </div>
 
@@ -301,15 +308,20 @@ const ProjectForm = () => {
                       <label htmlFor="ward" className="block text-sm font-medium text-gray-700">
                         Ward *
                       </label>
-                      <input
-                        type="text"
-                        name="ward"
+                      <select
                         id="ward"
+                        name="ward"
                         required
                         value={formData.ward}
                         onChange={handleInputChange}
-                        className="mt-1 focus:ring-green-500 focus:border-green-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
-                      />
+                        className="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm"
+                        disabled={!formData.constituency}
+                      >
+                        <option value="">{formData.constituency ? 'Select Ward' : 'Select Constituency First'}</option>
+                        {wardOptions.map(w => (
+                          <option key={w} value={w}>{w}</option>
+                        ))}
+                      </select>
                     </div>
                   </div>
 
@@ -319,15 +331,19 @@ const ProjectForm = () => {
                       <label htmlFor="department" className="block text-sm font-medium text-gray-700">
                         Department *
                       </label>
-                      <input
-                        type="text"
-                        name="department"
+                      <select
                         id="department"
+                        name="department"
                         required
                         value={formData.department}
                         onChange={handleInputChange}
-                        className="mt-1 focus:ring-green-500 focus:border-green-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
-                      />
+                        className="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm"
+                      >
+                        <option value="">Select Department</option>
+                        {departments.map(dept => (
+                          <option key={dept.id} value={dept.name}>{dept.name}</option>
+                        ))}
+                      </select>
                     </div>
 
                     <div className="col-span-6 sm:col-span-3">

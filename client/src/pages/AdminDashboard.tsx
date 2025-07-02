@@ -4,12 +4,9 @@ import { UserContext } from "../context/UserContext";
 import { BellIcon, UserGroupIcon, ClipboardIcon, UserPlusIcon, ClockIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
 import { api } from '../services/api';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
-import * as XLSX from 'xlsx';
-import { saveAs } from 'file-saver';
 import { Dialog } from '@headlessui/react';
 import { Fragment, useRef } from 'react';
 import jsPDF from 'jspdf';
-import pptxgen from 'pptxgenjs';
 
 interface User {
   id: string;
@@ -33,6 +30,8 @@ const AdminDashboard: React.FC = () => {
   const [addUserLoading, setAddUserLoading] = useState(false);
   const [addUserError, setAddUserError] = useState('');
   const addUserRef = useRef(null);
+  const [showUserSection, setShowUserSection] = useState(false);
+  const [activeUserTab, setActiveUserTab] = useState<'recent' | 'pending'>('recent');
 
   // Placeholder stats (replace with real data as needed)
   const totalProjects = 42; // TODO: fetch real project count
@@ -64,60 +63,6 @@ const AdminDashboard: React.FC = () => {
     const end = new Date(p.timeline?.expectedEndDate);
     return p.status !== 'Completed' && end < new Date();
   });
-
-  // Export to Excel/CSV
-  const handleExport = () => {
-    const ws = XLSX.utils.json_to_sheet(projects.map(p => ({
-      Name: p.name,
-      Status: p.status,
-      Budget: p.budget?.amount,
-      Progress: p.progress,
-      Start: p.timeline?.startDate,
-      End: p.timeline?.expectedEndDate,
-      Category: p.category,
-      Ward: p.location?.ward,
-      SubCounty: p.location?.subCounty,
-    })));
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Projects');
-    const buf = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-    saveAs(new Blob([buf], { type: 'application/octet-stream' }), 'projects_report.xlsx');
-  };
-
-  // Export to PDF
-  const handleExportPDF = () => {
-    const doc = new jsPDF();
-    doc.setFontSize(16);
-    doc.text('Projects Report', 14, 16);
-    doc.setFontSize(10);
-    let y = 28;
-    projects.forEach((p, idx) => {
-      doc.text(`${idx + 1}. ${p.name} | Status: ${p.status} | Budget: ${p.budget?.amount || ''} | Progress: ${p.progress || ''}%`, 14, y);
-      y += 8;
-      if (y > 270) {
-        doc.addPage();
-        y = 16;
-      }
-    });
-    doc.save('projects_report.pdf');
-  };
-
-  // Export to PowerPoint
-  const handleExportPPT = () => {
-    const pptx = new pptxgen();
-    const slide = pptx.addSlide();
-    slide.addText('Projects Report', { x: 0.5, y: 0.3, fontSize: 24, bold: true, color: '003366' });
-    let y = 1;
-    projects.forEach((p, idx) => {
-      slide.addText(`${idx + 1}. ${p.name} | Status: ${p.status} | Budget: ${p.budget?.amount || ''} | Progress: ${p.progress || ''}%`, { x: 0.5, y, fontSize: 12 });
-      y += 0.3;
-      if (y > 6.5) {
-        y = 1;
-        pptx.addSlide();
-      }
-    });
-    pptx.writeFile('projects_report.pptx');
-  };
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -217,9 +162,26 @@ const AdminDashboard: React.FC = () => {
     }
   };
 
+  const handleExportPDF = () => {
+    const doc = new jsPDF();
+    doc.setFontSize(16);
+    doc.text('Projects Report', 14, 16);
+    doc.setFontSize(10);
+    let y = 28;
+    projects.forEach((p, idx) => {
+      doc.text(`${idx + 1}. ${p.name} | Status: ${p.status} | Budget: ${p.budget?.amount || ''} | Progress: ${p.progress || ''}%`, 14, y);
+      y += 8;
+      if (y > 270) {
+        doc.addPage();
+        y = 16;
+      }
+    });
+    doc.save('projects_report.pdf');
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 mt-24">
+      <div className="w-full px-0 py-4 mt-24">
         {/* Dashboard Header */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8 gap-4">
           <div>
@@ -236,7 +198,7 @@ const AdminDashboard: React.FC = () => {
         {/* Summary Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
           <button 
-            onClick={() => {/* TODO: Navigate to users management */}}
+            onClick={() => { setShowUserSection(true); setActiveUserTab('recent'); }}
             className="bg-white rounded-xl shadow p-6 flex flex-col items-center hover:shadow-lg transition cursor-pointer hover:bg-blue-50"
           >
             <UserGroupIcon className="h-8 w-8 text-blue-700 mb-2" />
@@ -252,7 +214,7 @@ const AdminDashboard: React.FC = () => {
             <span className="text-gray-500 mt-2">Total Projects</span>
           </button>
           <button 
-            onClick={() => {/* TODO: Navigate to pending staff approvals */}}
+            onClick={() => { setShowUserSection(true); setActiveUserTab('pending'); }}
             className="bg-white rounded-xl shadow p-6 flex flex-col items-center hover:shadow-lg transition cursor-pointer hover:bg-yellow-50"
           >
             <UserPlusIcon className="h-8 w-8 text-yellow-600 mb-2" />
@@ -293,26 +255,6 @@ const AdminDashboard: React.FC = () => {
         <div className="bg-white rounded-xl shadow p-8 mb-10">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
             <h2 className="text-2xl font-bold text-blue-800">Analytics & Reporting</h2>
-            <div className="flex gap-2">
-              <button
-                onClick={handleExport}
-                className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg shadow hover:bg-green-700 transition font-semibold"
-              >
-                Download Excel
-              </button>
-              <button
-                onClick={handleExportPDF}
-                className="flex items-center px-4 py-2 bg-red-600 text-white rounded-lg shadow hover:bg-red-700 transition font-semibold"
-              >
-                Download PDF
-              </button>
-              <button
-                onClick={handleExportPPT}
-                className="flex items-center px-4 py-2 bg-purple-600 text-white rounded-lg shadow hover:bg-purple-700 transition font-semibold"
-              >
-                Download PowerPoint
-              </button>
-            </div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {/* Project Status Bar Chart */}
@@ -358,17 +300,91 @@ const AdminDashboard: React.FC = () => {
               </ul>
             )}
           </div>
+          <div className="flex gap-2">
+            <button
+              onClick={handleExportPDF}
+              className="flex items-center px-4 py-2 bg-red-600 text-white rounded-lg shadow hover:bg-red-700 transition font-semibold"
+            >
+              Download PDF
+            </button>
+          </div>
         </div>
-        {/* Recent Activity Feed Placeholder */}
-        <div className="bg-white rounded-xl shadow p-6 mb-10">
-          <h2 className="text-xl font-bold text-gray-800 mb-4">Recent Activity</h2>
-          <ul className="text-gray-600 space-y-2">
-            <li>• John Doe registered as staff</li>
-            <li>• Project 'Water Supply' approved</li>
-            <li>• Comment added to 'Road Rehab'</li>
-            {/* TODO: Dynamically load real activity */}
-          </ul>
-        </div>
+        {/* User Management Section with Tabs */}
+        {showUserSection && (
+          <div className="bg-white rounded-xl shadow p-6 mb-10">
+            <div className="flex items-center mb-4">
+              <button
+                className={`px-4 py-2 rounded-t-lg font-semibold focus:outline-none ${activeUserTab === 'recent' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-600'}`}
+                onClick={() => setActiveUserTab('recent')}
+              >
+                Recent Activity
+              </button>
+              <button
+                className={`ml-2 px-4 py-2 rounded-t-lg font-semibold focus:outline-none ${activeUserTab === 'pending' ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-600'}`}
+                onClick={() => setActiveUserTab('pending')}
+              >
+                Pending Staff Approvals
+              </button>
+              <button
+                className="ml-auto px-3 py-1 text-sm text-gray-500 hover:text-red-600"
+                onClick={() => setShowUserSection(false)}
+              >
+                Close
+              </button>
+            </div>
+            {activeUserTab === 'recent' && (
+              <div>
+                <h2 className="text-xl font-bold text-gray-800 mb-4">Recent Activity</h2>
+                <ul className="text-gray-600 space-y-2">
+                  <li>• John Doe registered as staff</li>
+                  <li>• Project 'Water Supply' approved</li>
+                  <li>• Comment added to 'Road Rehab'</li>
+                  {/* TODO: Dynamically load real activity */}
+                </ul>
+              </div>
+            )}
+            {activeUserTab === 'pending' && (
+              <div>
+                <h2 className="text-xl font-bold text-yellow-800 mb-4">Pending Staff Approvals</h2>
+                <table className="min-w-full bg-white rounded shadow mb-8">
+                  <thead>
+                    <tr>
+                      <th className="px-4 py-2">Name</th>
+                      <th className="px-4 py-2">Email</th>
+                      <th className="px-4 py-2">Role</th>
+                      <th className="px-4 py-2">Approved</th>
+                      <th className="px-4 py-2">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {users.filter(u => u.role === 'STAFF' && !u.isApproved).map(u => (
+                      <tr key={u.id} className="border-t">
+                        <td className="px-4 py-2">{u.name}</td>
+                        <td className="px-4 py-2">{u.email}</td>
+                        <td className="px-4 py-2">{u.role}</td>
+                        <td className="px-4 py-2">No</td>
+                        <td className="px-4 py-2 space-x-2">
+                          <button
+                            onClick={() => approveStaff(u.id)}
+                            className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700"
+                          >
+                            Approve
+                          </button>
+                          <button
+                            onClick={() => deleteUser(u.id)}
+                            className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700"
+                          >
+                            Delete
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
         {/* User Table (existing logic) */}
         {error && <div className="mb-4 text-red-600">{error}</div>}
         {success && <div className="mb-4 text-green-600">{success}</div>}

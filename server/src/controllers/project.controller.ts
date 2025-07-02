@@ -10,7 +10,7 @@ export const createProject = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const { title, description, status, budgetedCost, sourceOfFunds, progress, department, directorate, contractName, lpoNumber, contractNumber, contractor, contractPeriod, contractStartDate, contractEndDate, contractCost, implementationStatus, amountPaidToDate, recommendations, pmc, lastUpdated, constituency, ward, images, financialYear, latitude, longitude, staffId } = req.body;
+    const { title, description, status, budgetedCost, sourceOfFunds, progress, department, directorate, contractName, lpoNumber, contractNumber, contractor, contractPeriod, contractStartDate, contractEndDate, contractCost, implementationStatus, amountPaidToDate, recommendations, pmc, lastUpdated, constituency: subCounty, ward, images, financialYear, latitude, longitude, staffId } = req.body;
 
     if (!title) {
       res.status(400).json({
@@ -67,7 +67,7 @@ export const createProject = async (
         recommendations,
         pmc,
         lastUpdated: lastUpdated ? new Date(lastUpdated) : new Date(),
-        constituency,
+        subCounty,
         ward,
         images,
         financialYear,
@@ -253,7 +253,7 @@ export const updateProject = async (
 ): Promise<void> => {
   try {
     const { id } = req.params;
-    const { title, description, status, budgetedCost, sourceOfFunds, progress, department, directorate, contractName, lpoNumber, contractNumber, contractor, contractPeriod, contractStartDate, contractEndDate, contractCost, implementationStatus, amountPaidToDate, recommendations, pmc, lastUpdated, constituency, ward, images, financialYear, latitude, longitude, staffId } = req.body;
+    const { title, description, status, budgetedCost, sourceOfFunds, progress, department, directorate, contractName, lpoNumber, contractNumber, contractor, contractPeriod, contractStartDate, contractEndDate, contractCost, implementationStatus, amountPaidToDate, recommendations, pmc, lastUpdated, constituency: subCounty, ward, images, financialYear, latitude, longitude, staffId } = req.body;
 
     const project = await prisma.project.findUnique({
       where: { id },
@@ -318,7 +318,7 @@ export const updateProject = async (
         recommendations,
         pmc,
         lastUpdated: lastUpdated ? new Date(lastUpdated) : new Date(),
-        constituency,
+        subCounty,
         ward,
         images,
         financialYear,

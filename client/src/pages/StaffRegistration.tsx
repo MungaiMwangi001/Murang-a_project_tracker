@@ -36,7 +36,7 @@ const StaffRegistration: React.FC = () => {
       formData.append("password", form.password);
       formData.append("role", "STAFF");
       if (profilePic) formData.append("profilePic", profilePic);
-      const res = await fetch("/auth/register", {
+      const res = await fetch("/api/auth/register", {
         method: "POST",
         body: formData
       });

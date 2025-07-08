@@ -18,19 +18,33 @@ export interface Project {
   name: string;
   description: string;
   department: string;
-  constituency: string;
-  ward: string;
-  budget: string;
+  subCounty?: string;
+  ward?: string;
+  budget: {
+    amount: number;
+    currency: string;
+  };
   status: ProjectStatus;
-  startDate: string;
-  completionDate: string;
-  financialYear: string;
+  timeline: {
+    startDate: string;
+    expectedEndDate: string;
+  };
+  financialYear?: string;
   imageUrl?: string;
   contractor?: string;
   progress?: number;
   objectives?: string[];
   challenges?: string[];
   recommendations?: string[];
+  location?: {
+    county: string;
+    subCounty: string;
+    ward: string;
+  };
+  contractNumber?: string;
+  lpoNumber?: string;
+  contractCost?: number;
+  directorate?: string;
 }
 
 export const constituencies: Constituency[] = [

@@ -3,7 +3,7 @@ import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import ProjectGrid from '../components/ProjectGrid';
 import ProjectSections from '../components/ProjectSections';
 import ProjectDetailsModal from '../components/ProjectDetailsModal';
-import { Project } from '../types/project';
+import { Project } from '../types/projects';
 import { api } from '../services/api';
 import Navbar from '../components/Navbar';
 
@@ -25,11 +25,11 @@ const ProjectsPage = () => {
 
   const statusOptions = [
     { value: 'all', label: 'All Projects', color: 'gray' },
-    { value: 'completed', label: 'Completed', color: 'green' },
-    { value: 'ongoing', label: 'Ongoing', color: 'blue' },
-    { value: 'stalled', label: 'Stalled', color: 'red' },
-    { value: 'not_started', label: 'Not Started', color: 'gray' },
-    { value: 'under_procurement', label: 'Under Procurement', color: 'purple' }
+    { value: 'Completed', label: 'Completed', color: 'green' },
+    { value: 'Ongoing', label: 'Ongoing', color: 'blue' },
+    { value: 'Stalled', label: 'Stalled', color: 'red' },
+    { value: 'Not Started', label: 'Not Started', color: 'gray' },
+    { value: 'Under Procurement', label: 'Under Procurement', color: 'purple' }
   ];
 
   const subCountyData = [
@@ -107,6 +107,11 @@ const ProjectsPage = () => {
       setSelectedSubCounty(subcountyFromQuery);
       setSelectedWard(wardFromQuery || null);
     }
+
+    // In the useEffect that sets selectedSection and selectedSubCounty, if selectedSection is 'subCounty' and selectedSubCounty is not set, set it to 'Kiharu'.
+    if (selectedSection === 'subCounty' && !selectedSubCounty) {
+      setSelectedSubCounty('Kiharu');
+    }
   }, [location, subCountyName, year]);
 
   useEffect(() => {
@@ -155,17 +160,19 @@ const ProjectsPage = () => {
     setIsModalOpen(false);
     setSelectedSubCounty('');
     setSelectedWard(null);
-    navigate('/projects');
+    setSelectedSection('recent');
   };
 
   const handleSubCountyChange = (subCounty: string) => {
     setSelectedSubCounty(subCounty);
     setSelectedWard(null);
+    setSelectedSection('subCounty');
     navigate(`/projects?subcounty=${encodeURIComponent(subCounty)}`);
   };
 
   const handleWardChange = (ward: string) => {
     setSelectedWard(ward);
+    setSelectedSection('subCounty');
     navigate(`/projects?subcounty=${encodeURIComponent(selectedSubCounty)}&ward=${encodeURIComponent(ward)}`);
   };
 
@@ -175,7 +182,7 @@ const ProjectsPage = () => {
       {statusOptions.map(status => (
         <button
           key={status.value}
-          onClick={() => setSelectedStatus(status.value)}
+          onClick={() => navigate('/')}
           className={`inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-200
             ${selectedStatus === status.value 
               ? `bg-${status.color}-100 text-${status.color}-800 border-${status.color}-200` 
@@ -230,7 +237,7 @@ const ProjectsPage = () => {
           </div>
           <div className="space-y-8">
             {subCountyData.map(subCounty => {
-              const subCountyProjects = projects.filter(project => project.subCounty === subCounty.name);
+              const subCountyProjects = projects.filter(project => ((project.location?.subCounty || project.subCounty || '').toLowerCase() === subCounty.name.toLowerCase()));
               const displayProjects = subCountyProjects.slice(0, 5);
               
               return (
@@ -267,19 +274,19 @@ const ProjectsPage = () => {
                               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{project.ward}</td>
                               <td className="px-6 py-4 whitespace-nowrap">
                                 <button
-                                  onClick={() => { setSelectedProject(project); setIsModalOpen(true); }}
+                                  onClick={() => navigate(`/projects/${project.id}`)}
                                   className="text-sm font-medium text-green-600 hover:text-green-900 text-left"
                                 >
-                                  {project.title}
+                                  {project.name}
                                 </button>
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{project.department}</td>
                               <td className="px-6 py-4 whitespace-nowrap">
                                 <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                                  ${project.status === 'completed' ? 'bg-green-100 text-green-800' :
-                                    project.status === 'ongoing' ? 'bg-blue-100 text-blue-800' :
-                                    project.status === 'stalled' ? 'bg-red-100 text-red-800' :
-                                    project.status === 'not_started' ? 'bg-gray-100 text-gray-800' :
+                                  ${project.status === 'Completed' ? 'bg-green-100 text-green-800' :
+                                    project.status === 'Ongoing' ? 'bg-blue-100 text-blue-800' :
+                                    project.status === 'Stalled' ? 'bg-red-100 text-red-800' :
+                                    project.status === 'Not Started' ? 'bg-gray-100 text-gray-800' :
                                     'bg-purple-100 text-purple-800'}`}>
                                   {project.status.charAt(0).toUpperCase() + project.status.slice(1)}
                                 </span>
@@ -306,7 +313,7 @@ const ProjectsPage = () => {
     const subCounty = subCountyData.find(c => c.name === selectedSubCounty);
     if (!subCounty) return null;
 
-    const subCountyProjects = projects.filter(project => project.subCounty === subCounty.name);
+    const subCountyProjects = projects.filter(project => ((project.location?.subCounty || project.subCounty || '').toLowerCase() === subCounty.name.toLowerCase()));
     const filteredProjects = selectedWard 
       ? subCountyProjects.filter(project => project.ward === selectedWard)
       : subCountyProjects;
@@ -376,19 +383,19 @@ const ProjectsPage = () => {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{project.ward}</td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <button
-                        onClick={() => { setSelectedProject(project); setIsModalOpen(true); }}
+                        onClick={() => navigate(`/projects/${project.id}`)}
                         className="text-sm font-medium text-green-600 hover:text-green-900 text-left"
                       >
-                        {project.title}
+                        {project.name}
                       </button>
                               </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{project.department}</td>
                               <td className="px-6 py-4 whitespace-nowrap">
                                 <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                                  ${project.status === 'completed' ? 'bg-green-100 text-green-800' :
-                                    project.status === 'ongoing' ? 'bg-blue-100 text-blue-800' :
-                                    project.status === 'stalled' ? 'bg-red-100 text-red-800' :
-                                    project.status === 'not_started' ? 'bg-gray-100 text-gray-800' :
+                                  ${project.status === 'Completed' ? 'bg-green-100 text-green-800' :
+                                    project.status === 'Ongoing' ? 'bg-blue-100 text-blue-800' :
+                                    project.status === 'Stalled' ? 'bg-red-100 text-red-800' :
+                                    project.status === 'Not Started' ? 'bg-gray-100 text-gray-800' :
                           'bg-purple-100 text-purple-800'}`}>
                                   {project.status.charAt(0).toUpperCase() + project.status.slice(1)}
                                 </span>
@@ -528,14 +535,14 @@ const ProjectsPage = () => {
                         <tr key={project.id} className="hover:bg-gray-50 transition-colors duration-200">
                           <td className="px-6 py-4 whitespace-nowrap">
                             <button
-                              onClick={() => { setSelectedProject(project); setIsModalOpen(true); }}
+                              onClick={() => navigate(`/projects/${project.id}`)}
                               className="text-sm font-medium text-green-600 hover:text-green-900 text-left"
                             >
-                              {project.title}
+                              {project.name}
                             </button>
                               </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{project.department}</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{project.subCounty}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{project.location?.subCounty}</td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{project.ward}</td>
                               <td className="px-6 py-4 whitespace-nowrap">
                                 <div className="text-sm text-gray-900">{new Date(project.contractStartDate).toLocaleDateString()}</div>
@@ -545,9 +552,9 @@ const ProjectsPage = () => {
                                 <div className="w-full bg-gray-200 rounded-full h-2.5">
                                   <div 
                                     className={`h-2.5 rounded-full ${
-                                      project.status === 'completed' ? 'bg-green-600' :
-                                      project.status === 'ongoing' ? 'bg-blue-600' :
-                                      project.status === 'stalled' ? 'bg-red-600' :
+                                      project.status === 'Completed' ? 'bg-green-600' :
+                                      project.status === 'Ongoing' ? 'bg-blue-600' :
+                                      project.status === 'Stalled' ? 'bg-red-600' :
                                       'bg-gray-600'
                                     }`}
                                     style={{ width: `${project.progress}%` }}
@@ -557,10 +564,10 @@ const ProjectsPage = () => {
                               </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                              ${project.status === 'completed' ? 'bg-green-100 text-green-800' :
-                                project.status === 'ongoing' ? 'bg-blue-100 text-blue-800' :
-                                project.status === 'stalled' ? 'bg-red-100 text-red-800' :
-                                project.status === 'not_started' ? 'bg-gray-100 text-gray-800' :
+                              ${project.status === 'Completed' ? 'bg-green-100 text-green-800' :
+                                project.status === 'Ongoing' ? 'bg-blue-100 text-blue-800' :
+                                project.status === 'Stalled' ? 'bg-red-100 text-red-800' :
+                                project.status === 'Not Started' ? 'bg-gray-100 text-gray-800' :
                                 'bg-purple-100 text-purple-800'}`}>
                               {project.status.charAt(0).toUpperCase() + project.status.slice(1)}
                             </span>
@@ -623,7 +630,7 @@ const ProjectsPage = () => {
 
   // Filtering logic
   const filteredProjects = projects.filter(p => {
-    if (selectedSubCounty && p.subCounty !== selectedSubCounty) return false;
+    if (selectedSubCounty && p.location?.subCounty !== selectedSubCounty) return false;
     if (selectedWard && p.ward !== selectedWard) return false;
     if (selectedDepartment && p.department !== selectedDepartment) return false;
     if (selectedStatus && selectedStatus !== 'all' && p.status !== selectedStatus) return false;
@@ -658,20 +665,21 @@ const ProjectsPage = () => {
                   <button
                     key={section}
                     onClick={() => {
-                      navigate(`/projects/${section}`, { replace: true });
+                      const sectionPath = section === 'subCounty' ? 'sub-county' : section;
+                      navigate(`/projects/${sectionPath}`, { replace: true });
                       setSelectedSection(section as 'recent' | 'subCounty' | 'department');
-                      setSelectedSubCounty('Kangema');
+                      setSelectedSubCounty('Kiharu');
                       setSelectedProject(null);
                       setSelectedStatus('all');
                     }}
-                    className={`
-                      whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200
+                    className={
+                      `whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200
                       ${selectedSection === section
                         ? 'border-green-500 text-green-600'
-                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}
-                    `}
+                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`
+                    }
                   >
-                    {section.charAt(0).toUpperCase() + section.slice(1)} Projects
+                    {section.charAt(0).toUpperCase() + section.slice(1)}
                   </button>
                 ))}
               </nav>
@@ -679,38 +687,18 @@ const ProjectsPage = () => {
           </div>
         </div>
       )}
-
-        {renderHeader()}
       
-      <div className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6`}>
-        {/* Status Filters - Show when a year is selected or when status filter is applied */}
-        {(() => {
-          const searchParams = new URLSearchParams(location.search);
-          const yearFromQuery = searchParams.get('year');
-          const statusFromQuery = searchParams.get('status');
-          return (yearFromQuery && yearFromQuery !== 'all') || (statusFromQuery && statusFromQuery !== 'all');
-        })() && <StatusFilters />}
-        
-        {(() => {
-          const searchParams = new URLSearchParams(location.search);
-          const yearFromQuery = searchParams.get('year');
-          return yearFromQuery && yearFromQuery !== 'all';
-        })() ? (
-          <ProjectGrid projects={filteredProjects} onProjectClick={handleProjectClick} />
-        ) : (
-          <>
-            {selectedSection === 'recent' && renderRecentProjects()}
-            {selectedSection === 'subCounty' && renderSubCountyView()}
-            {selectedSection === 'department' && renderDepartmentView()}
-          </>
-        )}
-      </div>
-
-      <ProjectDetailsModal
-        project={selectedProject}
-        isOpen={isModalOpen}
-        onClose={handleBackToProjects}
-      />
+      {selectedSection === 'subCounty' && renderSubCountyView()}
+      {selectedSection === 'recent' && renderRecentProjects()}
+      {selectedSection === 'department' && renderDepartmentView()}
+      
+      {selectedProject && (
+        <ProjectDetailsModal
+          project={selectedProject}
+          isOpen={isModalOpen}
+          onClose={handleBackToProjects}
+        />
+      )}
     </div>
   );
 };

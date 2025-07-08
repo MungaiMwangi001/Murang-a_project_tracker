@@ -87,73 +87,41 @@ const Navbar = () => {
               </svg>
             </button>
 
-            {/* Year Dropdown Menu */}
+            {/* Year Dropdown Menu - Only Financial Years */}
             {isYearDropdownOpen && (
               <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl border border-gray-100">
-                <Link
-                  to="/projects"
-                  className="block px-4 py-2.5 text-gray-700 hover:bg-green-50 hover:text-green-700 first:rounded-t-lg"
-                  onClick={() => setIsYearDropdownOpen(false)}
-                >
-                  All Projects
-                </Link>
-                <Link
-                  to="/projects/recent"
-                  className="block px-4 py-2.5 text-gray-700 hover:bg-green-50 hover:text-green-700"
-                  onClick={() => setIsYearDropdownOpen(false)}
-                >
-                  Recent Projects
-                </Link>
-                <Link
-                  to="/projects/sub-county"
-                  className="block px-4 py-2.5 text-gray-700 hover:bg-green-50 hover:text-green-700"
-                  onClick={() => setIsYearDropdownOpen(false)}
-                >
-                  By Sub-County
-                </Link>
-                <Link
-                  to="/projects/department"
-                  className="block px-4 py-2.5 text-gray-700 hover:bg-green-50 hover:text-green-700"
-                  onClick={() => setIsYearDropdownOpen(false)}
-                >
-                  By Department
-                </Link>
-                <div className="border-t border-gray-100">
-                  <div className="px-4 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Filter by Year
-                  </div>
-                  {yearOptions.map(option => (
-                    <Link
-                      key={option.value}
-                      to={`/projects${option.value === 'all' ? '' : `?year=${option.value}`}`}
-                      className="block px-4 py-2.5 text-gray-700 hover:bg-green-50 hover:text-green-700"
-                      onClick={() => {
-                        console.log('Navbar - Selected year:', option.value);
-                        console.log('Navbar - Navigating to:', `/projects${option.value === 'all' ? '' : `?year=${option.value}`}`);
-                        setIsYearDropdownOpen(false);
-                        setSelectedYear(option.value);
-                      }}
-                    >
-                      {option.label}
-                    </Link>
-                  ))}
+                <div className="px-4 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Filter by Financial Year
                 </div>
+                {yearOptions.map(option => (
+                  <Link
+                    key={option.value}
+                    to={`/projects${option.value === 'all' ? '' : `?year=${option.value}`}`}
+                    className="block px-4 py-2.5 text-gray-700 hover:bg-green-50 hover:text-green-700"
+                    onClick={() => {
+                      setIsYearDropdownOpen(false);
+                      setSelectedYear(option.value);
+                    }}
+                  >
+                    {option.label}
+                  </Link>
+                ))}
               </div>
             )}
           </div>
 
           <Link
-            to="/staff"
+            to="/contact"
             className="text-white hover:text-green-200 font-medium text-lg"
           >
-            Staff
+            Contact Us
           </Link>
 
           <Link
-            to="/faq"
+            to="/login"
             className="text-white hover:text-green-200 font-medium text-lg"
           >
-            FAQ
+            Login
           </Link>
         </div>
       </div>

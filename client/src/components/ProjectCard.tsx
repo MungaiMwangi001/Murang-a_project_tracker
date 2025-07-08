@@ -1,12 +1,11 @@
-import { useState } from 'react';
-import { Project, ProjectStatus } from '../types/project';
+import { Project } from '../types/projects';
 
 interface ProjectCardProps {
   project: Project;
   onViewDetails?: (projectId: string) => void;
 }
 
-const getStatusColor = (status: ProjectStatus): { bg: string; text: string; button: string } => {
+const getStatusColor = (status: Project['status']): { bg: string; text: string; button: string } => {
   switch (status) {
     case 'Completed':
       return {
@@ -38,6 +37,12 @@ const getStatusColor = (status: ProjectStatus): { bg: string; text: string; butt
         text: 'text-purple-800',
         button: 'bg-purple-600 hover:bg-purple-700'
       };
+    default:
+      return {
+        bg: 'bg-gray-100',
+        text: 'text-gray-800',
+        button: 'bg-gray-600 hover:bg-gray-700'
+      };
   }
 };
 
@@ -51,26 +56,17 @@ const formatCurrency = (amount: number, currency: string): string => {
 };
 
 const ProjectCard = ({ project, onViewDetails }: ProjectCardProps) => {
-  const [isExpanded, setIsExpanded] = useState(false);
   const statusColors = getStatusColor(project.status);
 
-  const handleClick = () => {
-    if (onViewDetails) {
-      onViewDetails(project.id);
-    } else {
-      setIsExpanded(!isExpanded);
-    }
-  };
-
   return (
-    <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-all duration-300">
+    <div className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 flex flex-col">
       {/* Project Image */}
-      <div className="relative h-48">
+      <div className="relative h-48 rounded-t-2xl overflow-hidden">
         {project.imageUrl ? (
           <img
             src={project.imageUrl}
             alt={project.name}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover object-center"
           />
         ) : (
           <div className="w-full h-full bg-gray-200 flex items-center justify-center">
@@ -90,59 +86,42 @@ const ProjectCard = ({ project, onViewDetails }: ProjectCardProps) => {
           </div>
         )}
         <div className="absolute top-2 right-2">
-          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusColors.bg} ${statusColors.text}`}>
+          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold shadow ${statusColors.bg} ${statusColors.text}`}>
             {project.status}
           </span>
         </div>
       </div>
 
       {/* Project Info */}
-      <div className="p-4">
-        <h3 className="text-xl font-semibold text-gray-900 mb-2">{project.name}</h3>
-        <p className="text-sm text-gray-600 mb-4 line-clamp-2">{project.description}</p>
-
-        <div className="space-y-3">
-          {/* Location */}
-          <div className="flex items-start text-sm">
-            <svg className="w-4 h-4 text-gray-400 mt-0.5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div className="p-5 flex-1 flex flex-col justify-between">
+        <div>
+          <h3 className="text-xl font-bold text-gray-900 mb-1 truncate">{project.name}</h3>
+          <p className="text-sm text-gray-600 mb-3 line-clamp-2">{project.description}</p>
+        </div>
+        <div className="flex flex-col gap-2 mt-2">
+          <div className="flex items-center text-xs text-gray-500">
+            <svg className="w-4 h-4 mr-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
-            <div className="text-gray-600">
-              {project.location.ward}, {project.location.subCounty}
-            </div>
+            {project.location ? `${project.location.ward}, ${project.location.subCounty}` : 'Location N/A'}
           </div>
-
-          {/* Budget */}
-          <div className="flex items-center text-sm text-gray-600 mb-3">
-            <svg className="w-4 h-4 mr-1.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="flex items-center text-xs text-gray-500">
+            <svg className="w-4 h-4 mr-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             {formatCurrency(project.budget.amount, project.budget.currency)}
           </div>
-
-          {/* Progress Bar */}
-          <div className="mb-4">
-            <div className="flex justify-between text-xs text-gray-600 mb-1">
-              <span>Progress</span>
-              <span>{project.progress}%</span>
-            </div>
-            <div className="w-full bg-gray-200 rounded-full h-2">
-              <div
-                className={`rounded-full h-2 transition-all duration-300 ${statusColors.button}`}
-                style={{ width: `${project.progress}%` }}
-              />
-            </div>
+          <div className="flex items-center text-xs text-gray-500">
+            <svg className="w-4 h-4 mr-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            {`${new Date(project.timeline.startDate).toLocaleDateString()} - ${new Date(project.timeline.expectedEndDate).toLocaleDateString()}`}
           </div>
         </div>
-
-        {/* View Details Button */}
         <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onViewDetails?.(project.id);
-          }}
-          className={`px-4 py-1.5 text-sm rounded-md text-white font-medium transition-colors duration-200 ${statusColors.button} hover:shadow-md`}
+          onClick={() => onViewDetails?.(project.id)}
+          className={`mt-5 w-full py-2 rounded-lg text-white font-semibold text-sm shadow ${statusColors.button} transition-colors duration-200`}
         >
           View Details
         </button>

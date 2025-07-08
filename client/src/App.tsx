@@ -8,6 +8,7 @@ import Login from "./pages/Login";
 import AdminDashboard from "./pages/AdminDashboard";
 import StaffDashboard from "./pages/StaffDashboard";
 import { UserContext } from "./context/UserContext";
+import ContactUs from './pages/ContactUs';
 import './App.css';
 
 const App: React.FC = () => {
@@ -40,6 +41,7 @@ const App: React.FC = () => {
         <Route path="/projects/department" element={<ProjectsPage />} />
         <Route path="/projects/department/:departmentName" element={<ProjectsPage />} />
         <Route path="/projects/:id" element={<ProjectDetailPage />} />
+        <Route path="/contact" element={<ContactUs />} />
       </Routes>
     </Router>
   );

@@ -1,9 +1,10 @@
-import { useParams, useNavigate } from 'react-router-dom';
-import { useState, useEffect } from 'react';
-import { Project } from '../types/project';
+import { useParams, useNavigate, Navigate } from 'react-router-dom';
+import { useState, useEffect, useContext } from 'react';
+import { Project } from '../types/projects';
 import { api } from '../services/api';
 import ProjectComments from '../components/ProjectComments';
 import { Comment } from '../types/project';
+import { UserContext } from '../context/UserContext';
 
 const ProjectDetailPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -14,6 +15,12 @@ const ProjectDetailPage = () => {
   const [comments, setComments] = useState<Comment[]>([]);
   const [commentsLoading, setCommentsLoading] = useState(true);
   const [commentsError, setCommentsError] = useState<string | null>(null);
+  const { user } = useContext(UserContext);
+
+  // Guard against invalid IDs
+  if (!id || id === 'subCounty' || id === 'recent' || id === 'department') {
+    return <Navigate to="/projects" />;
+  }
 
   useEffect(() => {
     const fetchProject = async () => {
@@ -45,7 +52,12 @@ const ProjectDetailPage = () => {
       setCommentsLoading(true);
       setCommentsError(null);
       try {
-        const res = await fetch(`/api/comments/project/${id}`);
+        const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+        const res = await fetch(`${API_BASE_URL}/api/comments/project/${id}`);
+        if (res.status === 404) {
+          setComments([]); // No comments yet
+          return;
+        }
         if (!res.ok) throw new Error('Failed to fetch comments');
         const data = await res.json();
         setComments(data.comments || []);
@@ -62,12 +74,14 @@ const ProjectDetailPage = () => {
     if (!id) return;
     try {
       const token = localStorage.getItem('token');
-      const requestBody: any = { projectId: id, content };
-      if (userName) {
-        requestBody.userName = userName;
-      }
+      const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+      const requestBody: any = { 
+        projectId: id, 
+        content,
+        userName: userName || 'Anonymous User' // Always provide a userName
+      };
       
-      const res = await fetch('/api/comments', {
+      const res = await fetch(`${API_BASE_URL}/api/comments`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -75,11 +89,17 @@ const ProjectDetailPage = () => {
         },
         body: JSON.stringify(requestBody)
       });
-      if (!res.ok) throw new Error('Failed to add comment');
+      
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.message || `HTTP ${res.status}: ${res.statusText}`);
+      }
+      
       const data = await res.json();
       setComments([data.comment, ...comments]);
-    } catch (err) {
-      alert('Failed to add comment. Please try again.');
+    } catch (err: any) {
+      console.error('Comment error:', err);
+      alert(`Failed to add comment: ${err.message}`);
     }
   };
 
@@ -173,19 +193,19 @@ const ProjectDetailPage = () => {
               <div>
                 <h3 className="text-lg font-medium text-gray-900 mb-2">Location</h3>
                 <div className="space-y-1 text-gray-600">
-                  <p>County: {project.location.county}</p>
-                  <p>Sub-County: {project.location.subCounty}</p>
-                  <p>Ward: {project.location.ward}</p>
+                  <p>County: {project.location?.county}</p>
+                  <p>Sub-County: {project.location?.subCounty}</p>
+                  <p>Ward: {project.location?.ward}</p>
                 </div>
               </div>
-            <div>
+              <div>
                 <h3 className="text-lg font-medium text-gray-900 mb-2">Budget</h3>
                 <p className="text-gray-600">
-                  {new Intl.NumberFormat('en-KE', {
+                  {project.budget ? new Intl.NumberFormat('en-KE', {
                     style: 'currency',
                     currency: project.budget.currency,
                     minimumFractionDigits: 0,
-                  }).format(project.budget.amount)}
+                  }).format(project.budget.amount) : 'N/A'}
                 </p>
               </div>
             </div>
@@ -196,11 +216,11 @@ const ProjectDetailPage = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm text-gray-500">Start Date</p>
-                  <p className="text-gray-900">{new Date(project.timeline.startDate).toLocaleDateString()}</p>
+                  <p className="text-gray-900">{project.timeline ? new Date(project.timeline.startDate).toLocaleDateString() : 'N/A'}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">Expected Completion</p>
-                  <p className="text-gray-900">{new Date(project.timeline.expectedEndDate).toLocaleDateString()}</p>
+                  <p className="text-sm text-gray-500">Expected End Date</p>
+                  <p className="text-gray-900">{project.timeline ? new Date(project.timeline.expectedEndDate).toLocaleDateString() : 'N/A'}</p>
                 </div>
               </div>
             </div>
@@ -218,51 +238,11 @@ const ProjectDetailPage = () => {
         )}
 
             {/* Milestones */}
-            {project.milestones && project.milestones.length > 0 && (
-              <div className="mb-6">
-                <h3 className="text-lg font-medium text-gray-900 mb-2">Milestones</h3>
-                <div className="space-y-4">
-                  {project.milestones.map((milestone, index) => (
-                    <div key={index} className="border-l-4 border-blue-500 pl-4">
-                      <div className="flex items-center">
-                        <div className={`h-4 w-4 rounded-full mr-2 ${
-                          milestone.completed ? 'bg-green-500' : 'bg-gray-300'
-                        }`} />
-                        <h4 className="text-lg font-medium">{milestone.title}</h4>
-                  </div>
-                      <p className="text-gray-600 mt-1">{milestone.description}</p>
-                      <p className="text-sm text-gray-500 mt-1">
-                        Due: {new Date(milestone.dueDate).toLocaleDateString()}
-                    </p>
-                  </div>
-                  ))}
-                </div>
-              </div>
-            )}
+            {/* project.milestones and project.updates are removed as per the instructions */}
 
             {/* Updates */}
-            {project.updates && project.updates.length > 0 && (
-              <div>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">Recent Updates</h3>
-                <div className="space-y-4">
-                  {project.updates.map((update, index) => (
-                    <div key={index} className="bg-gray-50 rounded-lg p-4">
-                      <p className="text-sm text-gray-500 mb-1">
-                        {new Date(update.date).toLocaleDateString()}
-                      </p>
-                      <p className="text-gray-700">{update.description}</p>
-                      {update.imageUrl && (
-                        <img
-                          src={update.imageUrl}
-                          alt="Update"
-                          className="mt-2 rounded-lg max-h-48 object-cover"
-                        />
-                      )}
-                  </div>
-                  ))}
-            </div>
-          </div>
-        )}
+            {/* project.updates are removed as per the instructions */}
+
             {/* Comments Section */}
             <div className="mt-12">
               {commentsLoading ? (

@@ -1,123 +1,49 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { constituencies, Project } from '../types/projects';
+import { constituencies } from '../types/projects';
 import StatusSummary from '../components/StatusSummary';
-import ProjectGrid from '../components/ProjectGrid';
-
-// Sample data - Replace with actual API data
-const sampleProjects: Project[] = [
-  {
-    id: '1',
-    name: 'Digital Skills Program',
-    description: 'Training youth on digital skills and computer literacy',
-    department: 'ict',
-    constituency: 'kiharu',
-    ward: 'Wangu',
-    budget: 'KES 2,500,000',
-    status: 'Ongoing',
-    startDate: '2024-01-15',
-    completionDate: '2024-06-30',
-    financialYear: '2023/2024',
-    imageUrl: 'https://images.unsplash.com/photo-1531482615713-2afd69097998?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
-    contractor: 'Tech Solutions Ltd',
-    progress: 65,
-    objectives: [
-      'Train 500 youth in basic computer skills',
-      'Establish 3 computer labs',
-      'Provide internet connectivity'
-    ],
-    challenges: [
-      'Limited access to computers in rural areas',
-      'Inconsistent power supply'
-    ],
-    recommendations: [
-      'Partner with local cyber cafes',
-      'Install solar power backup systems'
-    ]
-  },
-  {
-    id: '3',
-    name: 'Water Supply Project',
-    description: 'Installation of water supply infrastructure',
-    department: 'water',
-    constituency: 'kiharu',
-    ward: 'Wangu',
-    budget: 'KES 8,000,000',
-    status: 'Ongoing',
-    startDate: '2024-02-01',
-    completionDate: '2024-08-31',
-    financialYear: '2023/2024',
-    imageUrl: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
-    contractor: 'WaterTech Solutions',
-    progress: 40,
-    objectives: [
-      'Install 10km of water pipes',
-      'Construct 2 water storage tanks',
-      'Set up distribution points'
-    ],
-    challenges: [
-      'Rocky terrain in some areas',
-      'Pipeline route negotiations'
-    ],
-    recommendations: [
-      'Use modern drilling equipment',
-      'Enhance community engagement'
-    ]
-  }
-];
+import { useEffect, useState } from 'react';
+import { api } from '../services/api';
+import { Project } from '../types/projects';
 
 const WardProjectsPage = () => {
   const { constituencyId, wardName, year = 'all' } = useParams();
   const navigate = useNavigate();
-  
-  console.log('Route params:', { constituencyId, wardName, year });
-  
   const constituency = constituencies.find(c => c.id === constituencyId);
-  if (!constituency) {
-    console.log('Constituency not found:', constituencyId);
-    return <div>Constituency not found</div>;
-  }
-  
-  console.log('Found constituency:', constituency);
-  
-  if (!constituency.wards.includes(wardName || '')) {
-    console.log('Ward not found in constituency:', wardName);
-    return <div>Ward not found</div>;
-  }
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Filter projects by ward and year (if specified)
-  const wardProjects = sampleProjects.filter(project => {
-    const matchesWard = project.ward.toLowerCase() === wardName?.toLowerCase();
-    const matchesConstituency = project.constituency.toLowerCase() === constituencyId?.toLowerCase();
-    const matchesYear = year === 'all' || project.financialYear === year;
-    
-    console.log('Project filtering:', {
-      project: project.name,
-      wardMatch: matchesWard,
-      constituencyMatch: matchesConstituency,
-      yearMatch: matchesYear,
-      projectWard: project.ward.toLowerCase(),
-      paramWard: wardName?.toLowerCase(),
-      projectConstituency: project.constituency.toLowerCase(),
-      paramConstituency: constituencyId?.toLowerCase(),
-      projectYear: project.financialYear,
-      paramYear: year
-    });
-    
-    return matchesWard && matchesConstituency && matchesYear;
-  });
+  useEffect(() => {
+    setLoading(true);
+    api.getProjects()
+      .then((allProjects) => {
+        setProjects(allProjects.filter(project => {
+          const matchesWard = project.ward?.toLowerCase() === wardName?.toLowerCase();
+          const matchesConstituency = project.subCounty?.toLowerCase() === constituencyId?.toLowerCase();
+          const matchesYear = year === 'all' || project.financialYear === year;
+          return matchesWard && matchesConstituency && matchesYear;
+        }));
+        setLoading(false);
+      })
+      .catch((err) => {
+        setError('Failed to load projects');
+        setLoading(false);
+      });
+  }, [constituencyId, wardName, year]);
 
-  console.log('Filtered ward projects:', wardProjects);
+  if (!constituency) return <div>Constituency not found</div>;
+  if (!constituency.wards.includes(wardName || '')) return <div>Ward not found</div>;
+  if (loading) return <div>Loading...</div>;
+  if (error) return <div>{error}</div>;
 
   const projectStats = {
-    completed: wardProjects.filter(p => p.status === 'Completed').length,
-    ongoing: wardProjects.filter(p => p.status === 'Ongoing').length,
-    stalled: wardProjects.filter(p => p.status === 'Stalled').length,
-    notStarted: wardProjects.filter(p => p.status === 'Not Started').length,
-    underProcurement: wardProjects.filter(p => p.status === 'Under Procurement').length,
-    total: wardProjects.length
+    completed: projects.filter(p => p.status === 'Completed').length,
+    ongoing: projects.filter(p => p.status === 'Ongoing').length,
+    stalled: projects.filter(p => p.status === 'Stalled').length,
+    notStarted: projects.filter(p => p.status === 'Not Started').length,
+    underProcurement: projects.filter(p => p.status === 'Under Procurement').length,
+    total: projects.length
   };
-
-  console.log('Project stats:', projectStats);
 
   const yearDisplay = year === 'all' ? 'All Financial Years' : `Financial Year: ${year}`;
 
@@ -144,11 +70,32 @@ const WardProjectsPage = () => {
         </div>
 
         {/* Projects Grid */}
-        <ProjectGrid
-          projects={wardProjects}
-          title={`${wardName} Ward Projects`}
-          subtitle={yearDisplay}
-        />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {projects.map((project) => (
+            <div key={project.id} className="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden">
+              <div className="p-4">
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">{project.name}</h3>
+                <p className="text-gray-600 text-sm mb-3">{project.description}</p>
+                <div className="flex justify-between items-center">
+                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                    ${project.status === 'Completed' ? 'bg-green-100 text-green-800' :
+                      project.status === 'Ongoing' ? 'bg-blue-100 text-blue-800' :
+                      project.status === 'Stalled' ? 'bg-red-100 text-red-800' :
+                      'bg-gray-100 text-gray-800'}`}
+                  >
+                    {project.status}
+                  </span>
+                  <button
+                    onClick={() => navigate(`/projects/${project.id}`)}
+                    className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                  >
+                    View Details
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );

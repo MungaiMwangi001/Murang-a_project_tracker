@@ -5,7 +5,8 @@ export interface AuthenticatedRequest extends Request {
   user?: {
     id: string;
     email: string;
-    role: 'USER' | 'ADMIN';
+    role: string;
+    isApproved: boolean;
   };
 }
 

@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { registerUser, loginUser, logoutUser, createInitialAdmin } from '../controllers/auth.controller';
+import { registerUser, loginUser, logoutUser } from '../controllers/auth.controller';
 import { verifyToken } from '../middleware/auth.middleware';
 
 const router = Router();
@@ -12,8 +12,5 @@ router.post('/login', loginUser);
 
 // Logout (requires authentication)
 router.post('/logout', verifyToken, logoutUser);
-
-// Create initial admin (for testing - remove in production)
-router.post('/create-admin', createInitialAdmin);
 
 export default router;

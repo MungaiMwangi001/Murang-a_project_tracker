@@ -1,10 +1,9 @@
 import { useParams, useNavigate, Navigate } from 'react-router-dom';
-import { useState, useEffect, useContext } from 'react';
+import { useState, useEffect } from 'react';
 import { Project } from '../types/projects';
 import { api } from '../services/api';
 import ProjectComments from '../components/ProjectComments';
 import { Comment } from '../types/project';
-import { UserContext } from '../context/UserContext';
 
 const ProjectDetailPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -15,7 +14,6 @@ const ProjectDetailPage = () => {
   const [comments, setComments] = useState<Comment[]>([]);
   const [commentsLoading, setCommentsLoading] = useState(true);
   const [commentsError, setCommentsError] = useState<string | null>(null);
-  const { user } = useContext(UserContext);
 
   // Guard against invalid IDs
   if (!id || id === 'subCounty' || id === 'recent' || id === 'department') {

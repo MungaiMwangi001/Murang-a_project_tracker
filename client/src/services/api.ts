@@ -1,8 +1,8 @@
 import { Project as BackendProject } from '../types/project';
 import { Project as FrontendProject } from '../types/projects';
 
-// Get API base URL from environment or default to localhost
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+// Get API base URL from environment
+const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 // Convert backend project format to frontend format
 const convertProject = (backendProject: BackendProject): FrontendProject => {

@@ -52,7 +52,7 @@ const ProjectDetailPage = () => {
       setCommentsLoading(true);
       setCommentsError(null);
       try {
-        const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+        const API_BASE_URL = import.meta.env.VITE_API_URL;
         const res = await fetch(`${API_BASE_URL}/api/comments/project/${id}`);
         if (res.status === 404) {
           setComments([]); // No comments yet
@@ -74,7 +74,7 @@ const ProjectDetailPage = () => {
     if (!id) return;
     try {
       const token = localStorage.getItem('token');
-      const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+      const API_BASE_URL = import.meta.env.VITE_API_URL;
       const requestBody: any = { 
         projectId: id, 
         content,

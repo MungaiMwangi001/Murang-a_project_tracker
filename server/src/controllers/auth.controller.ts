@@ -152,50 +152,50 @@ export const logoutUser = async (
   }
 };
 
-// Create Initial Admin (for testing - remove in production)
-export const createInitialAdmin = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): Promise<void> => {
-  try {
-    // Check if admin already exists
-    const existingAdmin = await prisma.user.findFirst({
-      where: { role: 'ADMIN' }
-    });
-
-    if (existingAdmin) {
-      res.status(400).json({
-        error: 'Admin already exists',
-        message: 'An admin user already exists in the system'
-      });
-      return;
-    }
-
-    const hashedPassword = await hashPassword('admin123');
-
-    const admin = await prisma.user.create({
-      data: {
-        name: 'System Admin',
-        email: 'admin@muranga.gov.ke',
-        password: hashedPassword,
-        role: 'ADMIN' as any,
-      },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        role: true,
-        createdAt: true
-      }
-    });
-
-    res.status(201).json({
-      message: 'Initial admin created successfully',
-      admin
-    });
-  } catch (error) {
-    console.error('Create admin error:', error);
-    next(error);
-  }
-};
+// REMOVE OR PROTECT THIS ENDPOINT IN PRODUCTION
+// export const createInitialAdmin = async (
+//   req: Request,
+//   res: Response,
+//   next: NextFunction
+// ): Promise<void> => {
+//   try {
+//     // Check if admin already exists
+//     const existingAdmin = await prisma.user.findFirst({
+//       where: { role: 'ADMIN' }
+//     });
+//
+//     if (existingAdmin) {
+//       res.status(400).json({
+//         error: 'Admin already exists',
+//         message: 'An admin user already exists in the system'
+//       });
+//       return;
+//     }
+//
+//     const hashedPassword = await hashPassword('admin123');
+//
+//     const admin = await prisma.user.create({
+//       data: {
+//         name: 'System Admin',
+//         email: 'admin@muranga.gov.ke',
+//         password: hashedPassword,
+//         role: 'ADMIN' as any,
+//       },
+//       select: {
+//         id: true,
+//         name: true,
+//         email: true,
+//         role: true,
+//         createdAt: true
+//       }
+//     });
+//
+//     res.status(201).json({
+//       message: 'Initial admin created successfully',
+//       admin
+//     });
+//   } catch (error) {
+//     console.error('Create admin error:', error);
+//     next(error);
+//   }
+// };

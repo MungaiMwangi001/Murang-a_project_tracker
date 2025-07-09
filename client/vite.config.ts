@@ -12,6 +12,7 @@ export default defineConfig({
   },
   server: {
     port: 5173,
+    // Proxy is for local development only. In production, set VITE_API_URL.
     proxy: {
       '/auth': 'http://localhost:3000',
       '/api': 'http://localhost:3000',

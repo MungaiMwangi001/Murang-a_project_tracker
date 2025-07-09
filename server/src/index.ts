@@ -7,6 +7,7 @@ import projectRouter from './routes/project.routes';
 import commentRouter from './routes/comment.routes';
 import userRouter from './routes/user.routes';
 import { Request, Response, NextFunction } from 'express';
+import path from 'path';
 
 dotenv.config();
 
@@ -14,7 +15,10 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(helmet());
-app.use(cors());
+// Restrict CORS in production
+app.use(cors({
+  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+}));
 app.use(express.json());
 
 // Routes
@@ -22,6 +26,13 @@ app.use('/api/auth', authRouter);
 app.use('/api/projects', projectRouter);
 app.use('/api/comments', commentRouter);
 app.use('/api/users', userRouter);
+
+// Serve frontend build (client/dist) in production
+const clientBuildPath = path.join(__dirname, '../../client/dist');
+app.use(express.static(clientBuildPath));
+app.get('*', (req, res) => {
+  res.sendFile(path.join(clientBuildPath, 'index.html'));
+});
 
 // Health check endpoint
 app.get('/api/health', (_req, res) => {

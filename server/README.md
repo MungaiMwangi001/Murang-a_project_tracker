@@ -125,17 +125,30 @@ npx prisma generate
 
 # Run database migrations
 npx prisma migrate dev
-
-# (Optional) Seed database with initial data
-npx prisma db seed
 ```
 
-### **4. Start Development Server**
+### **4. Seed Demo Data (Recommended for Demo/Development)**
+This project includes a seed script to populate your database with demo users and projects. This is useful for quickly getting started or for demo purposes.
+
+```bash
+# Run the seed script (after migrations)
+npx prisma db seed
+# or, if you prefer
+npx ts-node prisma/seed.ts
+```
+
+- The seed script will insert demo users (admin, staff, public) and several projects with various statuses.
+- You can log in with:
+  - **Admin:** admin@example.com / adminpass
+  - **Staff:** staff@example.com / staffpass
+  - **Public:** public@example.com / publicpass
+
+### **5. Start Development Server**
 ```bash
 npm run dev
 ```
 
-### **5. Verify Installation**
+### **6. Verify Installation**
 The API will be running at: http://localhost:5000
 
 Test the health endpoint: http://localhost:5000/api/health

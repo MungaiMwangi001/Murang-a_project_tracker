@@ -107,7 +107,8 @@ export const getCommentsByProject = async (
       return;
     }
 
-    const comments = await prisma.comment.findMany({
+    // Fetch all comments for the project, including user and replies
+    const allComments = await prisma.comment.findMany({
       where: { projectId },
       include: {
         user: {
@@ -116,16 +117,35 @@ export const getCommentsByProject = async (
             name: true,
             role: true
           }
-        }
+        },
       },
       orderBy: {
-        createdAt: 'desc'
+        createdAt: 'asc'
+      }
+    });
+
+    // Build a map of comments by id
+    const commentMap: { [key: string]: any } = {};
+    allComments.forEach((comment: any) => {
+      comment.replies = [];
+      commentMap[comment.id] = comment;
+    });
+
+    // Build the nested structure
+    const nestedComments: any[] = [];
+    allComments.forEach((comment: any) => {
+      if (comment.parentId) {
+        if (commentMap[comment.parentId]) {
+          commentMap[comment.parentId].replies.push(comment);
+        }
+      } else {
+        nestedComments.push(comment);
       }
     });
 
     res.json({
-      comments,
-      count: comments.length
+      comments: nestedComments,
+      count: allComments.length
     });
   } catch (error) {
     console.error('Get comments error:', error);

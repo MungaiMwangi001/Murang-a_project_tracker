@@ -1,7 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { Project } from '../types/project';
-import { api } from '../services/api';
+import  api  from '../services/api';
 import ProjectComments from '../components/ProjectComments';
 import { Comment } from '../types/project';
 

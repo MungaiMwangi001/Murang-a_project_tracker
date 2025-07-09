@@ -30,15 +30,17 @@ const StaffRegistration: React.FC = () => {
     setError("");
     setSuccess("");
     try {
-      const formData = new FormData();
-      formData.append("name", form.name);
-      formData.append("email", form.email);
-      formData.append("password", form.password);
-      formData.append("role", "STAFF");
-      if (profilePic) formData.append("profilePic", profilePic);
       const res = await fetch("/api/auth/register", {
         method: "POST",
-        body: formData
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          name: form.name,
+          email: form.email,
+          password: form.password,
+          role: "STAFF"
+        })
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Registration failed");
@@ -142,4 +144,4 @@ const StaffRegistration: React.FC = () => {
   );
 };
 
-export default StaffRegistration; 
+export default StaffRegistration;

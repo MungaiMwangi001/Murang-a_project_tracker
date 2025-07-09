@@ -6,8 +6,11 @@ import ProjectDetailPage from './pages/ProjectDetailPage';
 import StaffRegistration from "./pages/StaffRegistration";
 import Login from "./pages/Login";
 import AdminDashboard from "./pages/AdminDashboard";
+import UsersManagement from "./pages/UserManagement";
+import PendingApprovals from "./pages/PendingApprovals";
 import StaffDashboard from "./pages/StaffDashboard";
 import { UserContext } from "./context/UserContext";
+import FaqPage from "./pages/FaqPage";
 import './App.css';
 
 const App: React.FC = () => {
@@ -32,6 +35,8 @@ const App: React.FC = () => {
         <Route path="/login" element={<Login />} />
         <Route path="/admin" element={user?.role === "ADMIN" ? <AdminDashboard /> : <Navigate to="/login" />} />
         <Route path="/staff/*" element={user?.role === "STAFF" ? <StaffDashboard /> : <Navigate to="/login" />} />
+        <Route path="/admin/users" element={<UsersManagement />} />
+        <Route path="/admin/pending-approvals" element={<PendingApprovals />} />
         <Route path="/" element={<HomePage />} />
         <Route path="/projects" element={<ProjectsPage />} />
         <Route path="/projects/recent" element={<ProjectsPage />} />
@@ -40,6 +45,7 @@ const App: React.FC = () => {
         <Route path="/projects/department" element={<ProjectsPage />} />
         <Route path="/projects/department/:departmentName" element={<ProjectsPage />} />
         <Route path="/projects/:id" element={<ProjectDetailPage />} />
+        <Route path="/faq" element={<FaqPage />} />
       </Routes>
     </Router>
   );

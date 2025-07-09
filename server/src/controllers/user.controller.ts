@@ -2,7 +2,59 @@ import { Request, Response, NextFunction } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { hashPassword } from '../utils/password.utils';
 
+
 const prisma = new PrismaClient();
+
+export const getPendingUsers = async (req: Request, res: Response) => {
+  try {
+    const users = await prisma.user.findMany({
+      where: {
+        role: 'STAFF',
+        isApproved: false
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        createdAt: true
+      }
+    });
+    res.json(users);
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to fetch pending users' });
+  }
+};
+
+export const approveUser = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const user = await prisma.user.update({
+      where: { id },
+      data: { isApproved: true },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        isApproved: true
+      }
+    });
+    res.json(user);
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to approve user' });
+  }
+};
+
+export const rejectUser = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    await prisma.user.delete({
+      where: { id }
+    });
+    res.json({ message: 'User rejected successfully' });
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to reject user' });
+  }
+};
 
 // Get All Users (Admin only)
 export const getAllUsers = async (
@@ -11,6 +63,15 @@ export const getAllUsers = async (
   next: NextFunction
 ): Promise<void> => {
   try {
+    const { status } = req.query;
+    
+    const whereClause = {
+      ...(status === 'pending' && { 
+        role: 'STAFF',
+        isApproved: false 
+      })
+    };
+
     const users = await prisma.user.findMany({
       select: {
         id: true,
@@ -32,7 +93,7 @@ export const getAllUsers = async (
       }
     });
 
-    res.json({
+     res.json({
       users,
       count: users.length
     });

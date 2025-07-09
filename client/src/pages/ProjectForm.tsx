@@ -237,19 +237,20 @@ const ProjectForm = () => {
                         Status *
                       </label>
                       <select
-                        id="status"
-                        name="status"
-                        required
-                        value={formData.status}
-                        onChange={handleInputChange}
-                        className="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm"
-                      >
-                        <option value="not_started">Not Started</option>
-                        <option value="ongoing">Ongoing</option>
-                        <option value="completed">Completed</option>
-                        <option value="stalled">Stalled</option>
-                        <option value="under_procurement">Under Procurement</option>
-                      </select>
+  id="status"
+  name="status"
+  required
+  value={formData.status}
+  onChange={handleInputChange}
+  className="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white text-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm"
+>
+  <option value="not_started">Not Started</option>
+  <option value="ongoing">Ongoing</option>
+  <option value="completed">Completed</option>
+  <option value="stalled">Stalled</option>
+  <option value="under_procurement">Under Procurement</option>
+</select>
+
                     </div>
 
                     <div className="col-span-6 sm:col-span-3">
@@ -257,18 +258,19 @@ const ProjectForm = () => {
                         Financial Year *
                       </label>
                       <select
-                        id="financialYear"
-                        name="financialYear"
-                        required
-                        value={formData.financialYear}
-                        onChange={handleInputChange}
-                        className="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm"
-                      >
-                        <option value="">Select Year</option>
-                        <option value="2024/2025">2024/2025</option>
-                        <option value="2023/2024">2023/2024</option>
-                        <option value="2022/2023">2022/2023</option>
-                      </select>
+  id="financialYear"
+  name="financialYear"
+  required
+  value={formData.financialYear}
+  onChange={handleInputChange}
+  className="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white text-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm"
+>
+  <option value="">Select Year</option>
+  <option value="2024/2025">2024/2025</option>
+  <option value="2023/2024">2023/2024</option>
+  <option value="2022/2023">2022/2023</option>
+</select>
+
                     </div>
                   </div>
 
@@ -279,22 +281,23 @@ const ProjectForm = () => {
                         Constituency *
                       </label>
                       <select
-                        id="constituency"
-                        name="constituency"
-                        required
-                        value={formData.constituency}
-                        onChange={handleInputChange}
-                        className="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm"
-                      >
-                        <option value="">Select Constituency</option>
-                        <option value="Kangema">Kangema</option>
-                        <option value="Mathioya">Mathioya</option>
-                        <option value="Kiharu">Kiharu</option>
-                        <option value="Kigumo">Kigumo</option>
-                        <option value="Maragwa">Maragwa</option>
-                        <option value="Kandara">Kandara</option>
-                        <option value="Gatanga">Gatanga</option>
-                      </select>
+  id="constituency"
+  name="constituency"
+  required
+  value={formData.constituency}
+  onChange={handleInputChange}
+  className="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white text-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm"
+>
+  <option value="">Select Constituency</option>
+  <option value="Kangema">Kangema</option>
+  <option value="Mathioya">Mathioya</option>
+  <option value="Kiharu">Kiharu</option>
+  <option value="Kigumo">Kigumo</option>
+  <option value="Maragwa">Maragwa</option>
+  <option value="Kandara">Kandara</option>
+  <option value="Gatanga">Gatanga</option>
+</select>
+
                     </div>
 
                     <div className="col-span-6 sm:col-span-3">

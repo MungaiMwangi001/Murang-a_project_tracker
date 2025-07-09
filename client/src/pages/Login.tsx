@@ -23,20 +23,33 @@ const Login: React.FC = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form)
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Login failed");
-      setUser(data.user);
-      localStorage.setItem("token", data.token);
+
+      const contentType = res.headers.get("content-type");
+      let responseData: any;
+
+      if (contentType && contentType.includes("application/json")) {
+        responseData = await res.json();
+      } else {
+        const text = await res.text();
+        responseData = { message:  text || "Invalid response format"};
+      }
+
+      if (!res.ok) throw new Error(responseData.message || "Login failed");
+
+      setUser(responseData.user);
+      localStorage.setItem("token", responseData.token);
+
       // Redirect based on role
-      if (data.user.role === "ADMIN") navigate("/admin");
-      else if (data.user.role === "STAFF") navigate("/staff");
+      if (responseData.user.role === "ADMIN") navigate("/admin");
+      else if (responseData.user.role === "STAFF") navigate("/staff");
       else navigate("/");
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
+      } catch (err: any) {
+        setError(err.message || "Something went wrong");
+      } finally {
+        setLoading(false);
+     }
+    };
+
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">

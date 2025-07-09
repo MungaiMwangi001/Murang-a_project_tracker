@@ -130,7 +130,10 @@ export const loginUser = async (
     });
   } catch (error) {
     console.error('Login error:', error);
-    next(error);
+    res.status(500).json({
+      error: `Server Error`,
+      message: `An unexpected error occurred during login`
+    });
   }
 };
 

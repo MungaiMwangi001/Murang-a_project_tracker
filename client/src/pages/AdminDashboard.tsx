@@ -2,7 +2,7 @@ import React, { useEffect, useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { UserContext } from "../context/UserContext";
 import { BellIcon, UserGroupIcon, ClipboardIcon, UserPlusIcon, ClockIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
-import { api } from '../services/api';
+import  api  from '../services/api';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
@@ -10,6 +10,7 @@ import { Dialog } from '@headlessui/react';
 import { Fragment, useRef } from 'react';
 import jsPDF from 'jspdf';
 import pptxgen from 'pptxgenjs';
+import { Project } from "@/types/project";
 
 interface User {
   id: string;
@@ -24,7 +25,7 @@ const AdminDashboard: React.FC = () => {
   const { user } = useContext(UserContext);
   const navigate = useNavigate();
   const [users, setUsers] = useState<User[]>([]);
-  const [projects, setProjects] = useState<any[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -42,11 +43,22 @@ const AdminDashboard: React.FC = () => {
 
   // Fetch projects for analytics
   useEffect(() => {
-    api.getProjects().then(setProjects);
-  }, []);
+  const fetchProjects = async () => {
+    try {
+      const response = await api.getProjects();
+      // Ensure we always set an array, even if response is null/undefined
+      setProjects(Array.isArray(response?.data) ? response.data : []);
+    } catch (error) {
+      console.error('Failed to fetch projects:', error);
+      setProjects([]); // Fallback to empty array
+    }
+  };
+  fetchProjects();
+}, []);
 
   // Analytics calculations
-  const statusCounts = projects.reduce((acc, p) => {
+ 
+   const statusCounts = projects.reduce((acc, p) => {
     acc[p.status] = (acc[p.status] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
@@ -64,6 +76,7 @@ const AdminDashboard: React.FC = () => {
     const end = new Date(p.timeline?.expectedEndDate);
     return p.status !== 'Completed' && end < new Date();
   });
+
 
   // Export to Excel/CSV
   const handleExport = () => {
@@ -235,39 +248,46 @@ const AdminDashboard: React.FC = () => {
         </div>
         {/* Summary Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-          <button 
-            onClick={() => {/* TODO: Navigate to users management */}}
-            className="bg-white rounded-xl shadow p-6 flex flex-col items-center hover:shadow-lg transition cursor-pointer hover:bg-blue-50"
-          >
-            <UserGroupIcon className="h-8 w-8 text-blue-700 mb-2" />
-            <span className="text-3xl font-bold text-blue-700">{totalUsers}</span>
-            <span className="text-gray-500 mt-2">Total Users</span>
-          </button>
-          <button 
-            onClick={() => navigate('/projects')}
-            className="bg-white rounded-xl shadow p-6 flex flex-col items-center hover:shadow-lg transition cursor-pointer hover:bg-green-50"
-          >
-            <ClipboardIcon className="h-8 w-8 text-green-700 mb-2" />
-            <span className="text-3xl font-bold text-green-700">{totalProjects}</span>
-            <span className="text-gray-500 mt-2">Total Projects</span>
-          </button>
-          <button 
-            onClick={() => {/* TODO: Navigate to pending staff approvals */}}
-            className="bg-white rounded-xl shadow p-6 flex flex-col items-center hover:shadow-lg transition cursor-pointer hover:bg-yellow-50"
-          >
-            <UserPlusIcon className="h-8 w-8 text-yellow-600 mb-2" />
-            <span className="text-3xl font-bold text-yellow-600">{pendingStaff}</span>
-            <span className="text-gray-500 mt-2">Pending Staff Approvals</span>
-          </button>
-          <button 
-            onClick={() => navigate('/projects?status=not_started')}
-            className="bg-white rounded-xl shadow p-6 flex flex-col items-center hover:shadow-lg transition cursor-pointer hover:bg-purple-50"
-          >
-            <CheckCircleIcon className="h-8 w-8 text-purple-700 mb-2" />
-            <span className="text-3xl font-bold text-purple-700">{pendingProjects}</span>
-            <span className="text-gray-500 mt-2">Projects Pending Approval</span>
-          </button>
-        </div>
+        {/* Total Users Card */}
+  <button 
+    onClick={() => navigate('/admin/users')}
+    className="bg-white rounded-xl shadow p-6 flex flex-col items-center hover:shadow-lg transition cursor-pointer hover:bg-blue-50"
+  >
+    <UserGroupIcon className="h-8 w-8 text-blue-700 mb-2" />
+    <span className="text-3xl font-bold text-blue-700">{totalUsers}</span>
+    <span className="text-gray-500 mt-2">Total Users</span>
+  </button>
+
+  {/* Total Projects Card */}
+  <button 
+    onClick={() => navigate('/projects')}
+    className="bg-white rounded-xl shadow p-6 flex flex-col items-center hover:shadow-lg transition cursor-pointer hover:bg-green-50"
+  >
+    <ClipboardIcon className="h-8 w-8 text-green-700 mb-2" />
+    <span className="text-3xl font-bold text-green-700">{totalProjects}</span>
+    <span className="text-gray-500 mt-2">Total Projects</span>
+  </button>
+
+  {/* Pending Staff Approvals Card */}
+  <button 
+    onClick={() => navigate('/admin/pending-approvals')}
+    className="bg-white rounded-xl shadow p-6 flex flex-col items-center hover:shadow-lg transition cursor-pointer hover:bg-yellow-50"
+  >
+    <UserPlusIcon className="h-8 w-8 text-yellow-600 mb-2" />
+    <span className="text-3xl font-bold text-yellow-600">{pendingStaff}</span>
+    <span className="text-gray-500 mt-2">Pending Staff Approvals</span>
+  </button>
+
+  {/* Projects Pending Approval Card */}
+  <button 
+    onClick={() => navigate('/projects?status=pending')}
+    className="bg-white rounded-xl shadow p-6 flex flex-col items-center hover:shadow-lg transition cursor-pointer hover:bg-purple-50"
+  >
+    <CheckCircleIcon className="h-8 w-8 text-purple-700 mb-2" />
+    <span className="text-3xl font-bold text-purple-700">{pendingProjects}</span>
+    <span className="text-gray-500 mt-2">Projects Pending Approval</span>
+  </button>
+</div>
         {/* Quick Actions */}
         <div className="flex flex-wrap gap-4 mb-10">
           <button
@@ -377,43 +397,46 @@ const AdminDashboard: React.FC = () => {
         ) : (
           <div className="overflow-x-auto">
             <table className="min-w-full bg-white rounded shadow mb-8">
-              <thead>
-                <tr>
-                  <th className="px-4 py-2">Name</th>
-                  <th className="px-4 py-2">Email</th>
-                  <th className="px-4 py-2">Role</th>
-                  <th className="px-4 py-2">Approved</th>
-                  <th className="px-4 py-2">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {users.map(u => (
-                  <tr key={u.id} className="border-t">
-                    <td className="px-4 py-2">{u.name}</td>
-                    <td className="px-4 py-2">{u.email}</td>
-                    <td className="px-4 py-2">{u.role}</td>
-                    <td className="px-4 py-2">{u.role === "STAFF" ? (u.isApproved ? "Yes" : "No") : "-"}</td>
-                    <td className="px-4 py-2 space-x-2">
-                      {u.role === "STAFF" && !u.isApproved && (
-                        <button
-                          onClick={() => approveStaff(u.id)}
-                          className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700"
-                        >
-                          Approve
-                        </button>
-                      )}
-                      {u.role !== "ADMIN" && (
-                        <button
-                          onClick={() => deleteUser(u.id)}
-                          className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700"
-                        >
-                          Delete
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
+            <thead className="bg-blue-50">
+  <tr className="text-left text-gray-700 font-semibold">
+    <th className="px-4 py-2">Name</th>
+    <th className="px-4 py-2">Email</th>
+    <th className="px-4 py-2">Role</th>
+    <th className="px-4 py-2">Approved</th>
+    <th className="px-4 py-2">Actions</th>
+  </tr>
+</thead>
+
+
+             <tbody>
+  {users.map(u => (
+    <tr key={u.id} className="border-t text-gray-700">
+      <td className="px-4 py-2">{u.name}</td>
+      <td className="px-4 py-2">{u.email}</td>
+      <td className="px-4 py-2">{u.role}</td>
+      <td className="px-4 py-2">{u.role === "STAFF" ? (u.isApproved ? "Yes" : "No") : "-"}</td>
+      <td className="px-4 py-2 space-x-2">
+        {u.role === "STAFF" && !u.isApproved && (
+          <button
+            onClick={() => approveStaff(u.id)}
+            className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700"
+          >
+            Approve
+          </button>
+        )}
+        {u.role !== "ADMIN" && (
+          <button
+            onClick={() => deleteUser(u.id)}
+            className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700"
+          >
+            Delete
+          </button>
+        )}
+      </td>
+    </tr>
+  ))}
+</tbody>
+
             </table>
             {/* Project Table for Admin Delete */}
             <h2 className="text-xl font-bold mb-2 text-blue-800">All Projects</h2>

@@ -1,13 +1,47 @@
 import { Project } from '../types/project';
 
-// Sample data - replace with actual API calls
+interface ApiResponse<T> {
+  data: T;
+  status: number;
+  statusText: string;
+}
+
+interface ApiService {
+  // Project methods
+  getProjects: () => Promise<ApiResponse<Project[]>>;
+  getProject: (id: string) => Promise<ApiResponse<Project | null>>;
+  searchProjects: (query: string) => Promise<ApiResponse<Project[]>>;
+  filterProjects: (filters: ProjectFilters) => Promise<ApiResponse<Project[]>>;
+  createProject: (project: Omit<Project, 'id'>) => Promise<ApiResponse<Project>>;
+  updateProject: (id: string, project: Partial<Project>) => Promise<ApiResponse<Project>>;
+  deleteProject: (id: string) => Promise<ApiResponse<void>>;
+  
+  // HTTP methods
+  get: <T>(url: string) => Promise<ApiResponse<T>>;
+  post: <T>(url: string, data: any) => Promise<ApiResponse<T>>;
+  put: <T>(url: string, data: any) => Promise<ApiResponse<T>>;
+  delete: <T>(url: string) => Promise<ApiResponse<T>>;
+}
+
+interface ProjectFilters {
+  status?: string[];
+  category?: string[];
+  ward?: string[];
+  subCounty?: string[];
+  minBudget?: number;
+  maxBudget?: number;
+  startDate?: string;
+  endDate?: string;
+}
+
+// Sample data
 const sampleProjects: Project[] = [
   {
     id: '1',
     name: 'Digital Skills Training Program',
-    description: 'A comprehensive digital literacy program targeting youth in the community to enhance their employability and entrepreneurship skills.',
+    description: 'A comprehensive digital literacy program targeting youth in the community.',
     location: {
-      county: 'Sample County',
+      county: 'Murang\'a',
       subCounty: 'Central',
       ward: 'Downtown',
     },
@@ -26,7 +60,6 @@ const sampleProjects: Project[] = [
     objectives: [
       'Train 1000 youth in digital skills',
       'Establish 5 digital hubs',
-      'Create online learning platform',
     ],
     milestones: [
       {
@@ -43,126 +76,125 @@ const sampleProjects: Project[] = [
       },
     ],
   },
-  {
-    id: '2',
-    name: 'Community Water Supply Project',
-    description: 'Installation of water supply infrastructure to provide clean and reliable water access to the community.',
-    location: {
-      county: 'Sample County',
-      subCounty: 'Eastern',
-      ward: 'Riverside',
-    },
-    budget: {
-      amount: 5000000,
-      currency: 'KES',
-    },
-    status: 'Ongoing',
-    timeline: {
-      startDate: '2024-02-01',
-      expectedEndDate: '2024-08-31',
-    },
-    category: 'Infrastructure',
-    imageUrl: 'https://images.unsplash.com/photo-1581092160562-40aa08e78837',
-    progress: 40,
-    objectives: [
-      'Install 5km of water pipeline',
-      'Build 2 water storage tanks',
-      'Connect 1000 households',
-    ],
-    milestones: [
-      {
-        title: 'Phase 1',
-        description: 'Pipeline installation started',
-        dueDate: '2024-04-30',
-        completed: false,
-      },
-    ],
-    updates: [
-      {
-        date: '2024-03-01',
-        description: 'Ground breaking ceremony completed',
-      },
-    ],
-  },
+  // More sample projects...
 ];
 
-export const api = {
-  // Get all projects
-  getProjects: async (): Promise<Project[]> => {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 500));
-    return sampleProjects;
+// Helper function to simulate API delay
+const simulateApiDelay = async () => {
+  await new Promise(resolve => setTimeout(resolve, 500));
+};
+
+// Helper function to generate success response
+const successResponse = <T>(data: T): ApiResponse<T> => ({
+  data,
+  status: 200,
+  statusText: 'OK',
+});
+
+// Helper function to generate error response
+const errorResponse = (status: number, message: string): ApiResponse<null> => ({
+  data: null,
+  status,
+  statusText: message,
+});
+
+const api: ApiService = {
+  // Project methods
+  getProjects: async () => {
+    await simulateApiDelay();
+    return successResponse(sampleProjects);
   },
 
-  // Get a single project by ID
-  getProject: async (id: string): Promise<Project | undefined> => {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 500));
-    return sampleProjects.find(p => p.id === id);
+  getProject: async (id) => {
+    await simulateApiDelay();
+    const project = sampleProjects.find(p => p.id === id);
+    return project 
+      ? successResponse(project)
+      : errorResponse(404, 'Project not found');
   },
 
-  // Search projects
-  searchProjects: async (query: string): Promise<Project[]> => {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 500));
+  searchProjects: async (query) => {
+    await simulateApiDelay();
     const lowercaseQuery = query.toLowerCase();
-    return sampleProjects.filter(project =>
+    const results = sampleProjects.filter(project =>
       project.name.toLowerCase().includes(lowercaseQuery) ||
       project.description.toLowerCase().includes(lowercaseQuery) ||
-      project.category.toLowerCase().includes(lowercaseQuery) ||
-      project.location.ward.toLowerCase().includes(lowercaseQuery) ||
-      project.location.subCounty.toLowerCase().includes(lowercaseQuery)
+      project.category.toLowerCase().includes(lowercaseQuery)
     );
+    return successResponse(results);
   },
 
-  // Filter projects
-  filterProjects: async (filters: {
-    status?: string[];
-    category?: string[];
-    ward?: string[];
-    subCounty?: string[];
-    minBudget?: number;
-    maxBudget?: number;
-    startDate?: string;
-    endDate?: string;
-  }): Promise<Project[]> => {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    return sampleProjects.filter(project => {
-      if (filters.status && filters.status.length > 0) {
-        if (!filters.status.includes(project.status)) return false;
-      }
-      
-      if (filters.category && filters.category.length > 0) {
-        if (!filters.category.includes(project.category)) return false;
-      }
-      
-      if (filters.ward && filters.ward.length > 0) {
-        if (!filters.ward.includes(project.location.ward)) return false;
-      }
-      
-      if (filters.subCounty && filters.subCounty.length > 0) {
-        if (!filters.subCounty.includes(project.location.subCounty)) return false;
-      }
-      
-      if (filters.minBudget !== undefined) {
-        if (project.budget.amount < filters.minBudget) return false;
-      }
-      
-      if (filters.maxBudget !== undefined) {
-        if (project.budget.amount > filters.maxBudget) return false;
-      }
-      
-      if (filters.startDate) {
-        if (project.timeline.startDate < filters.startDate) return false;
-      }
-      
-      if (filters.endDate) {
-        if (project.timeline.expectedEndDate > filters.endDate) return false;
-      }
-      
+  filterProjects: async (filters) => {
+    await simulateApiDelay();
+    const results = sampleProjects.filter(project => {
+      if (filters.status?.length && !filters.status.includes(project.status)) return false;
+      if (filters.category?.length && !filters.category.includes(project.category)) return false;
+      if (filters.ward?.length && !filters.ward.includes(project.location.ward)) return false;
+      if (filters.subCounty?.length && !filters.subCounty.includes(project.location.subCounty)) return false;
+      if (filters.minBudget && project.budget.amount < filters.minBudget) return false;
+      if (filters.maxBudget && project.budget.amount > filters.maxBudget) return false;
       return true;
     });
+    return successResponse(results);
   },
-}; 
+
+  createProject: async (project) => {
+    await simulateApiDelay();
+    const newProject = {
+      ...project,
+      id: (sampleProjects.length + 1).toString(),
+    };
+    sampleProjects.push(newProject);
+    return successResponse(newProject);
+  },
+
+  updateProject: async (id, updates) => {
+    await simulateApiDelay();
+    const index = sampleProjects.findIndex(p => p.id === id);
+    if (index === -1) return errorResponse(404, 'Project not found');
+    
+    const updatedProject = {
+      ...sampleProjects[index],
+      ...updates,
+      id, // Ensure ID remains the same
+    };
+    sampleProjects[index] = updatedProject;
+    return successResponse(updatedProject);
+  },
+
+  deleteProject: async (id) => {
+    await simulateApiDelay();
+    const index = sampleProjects.findIndex(p => p.id === id);
+    if (index === -1) return errorResponse(404, 'Project not found');
+    
+    sampleProjects.splice(index, 1);
+    return successResponse(undefined);
+  },
+
+  // HTTP methods
+  get: async (url) => {
+    await simulateApiDelay();
+    console.log(`GET ${url}`);
+    return successResponse(null);
+  },
+
+  post: async (url, data) => {
+    await simulateApiDelay();
+    console.log(`POST ${url}`, data);
+    return successResponse(data);
+  },
+
+  put: async (url, data) => {
+    await simulateApiDelay();
+    console.log(`PUT ${url}`, data);
+    return successResponse(data);
+  },
+
+  delete: async (url) => {
+    await simulateApiDelay();
+    console.log(`DELETE ${url}`);
+    return successResponse(null);
+  },
+};
+
+export default api;

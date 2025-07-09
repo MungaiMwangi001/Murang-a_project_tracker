@@ -6,9 +6,13 @@ import {
   updateUser,
   deleteUser,
   getStaffMembers,
+  getPendingUsers,
+  approveUser,
+  rejectUser,
   approveStaff
 } from '../controllers/user.controller';
-import { verifyToken, requireAdmin } from '../middleware/auth.middleware';
+import { verifyToken, } from '../middleware/auth.middleware';
+import { requireAdmin } from '../middleware/auth.middleware';
 
 const router = Router();
 
@@ -23,5 +27,10 @@ router.post('/', createUser);
 router.put('/:id', updateUser);
 router.delete('/:id', deleteUser);
 router.put('/:id/approve', approveStaff);
+router.get('/users/pending', requireAdmin, getPendingUsers);
+router.put('/users/:id/approve', requireAdmin, approveUser);
+router.delete('/users/:id/reject', requireAdmin, rejectUser);
+
+
 
 export default router; 
